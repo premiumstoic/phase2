@@ -21,8 +21,14 @@ module mastermind(
     reg [1:0] lives;
     reg turn_A;
 
-    reg [2:0] maker_reg [3:0];
-    reg [2:0] braker_reg [3:0];
+    reg [2:0] maker_reg_0;
+    reg [2:0] maker_reg_1;
+    reg [2:0] maker_reg_2;
+    reg [2:0] maker_reg_3;
+    reg [2:0] braker_reg_0;
+    reg [2:0] braker_reg_1;
+    reg [2:0] braker_reg_2;
+    reg [2:0] braker_reg_3;
     reg [7:0] check_result;
     reg prev_enterA;
     reg prev_enterB;
@@ -51,8 +57,8 @@ module mastermind(
             prev_enterB <= 0;
             check_result <= 8'b0;
             
-            maker_reg[0] <= 0; maker_reg[1] <= 0; maker_reg[2] <= 0; maker_reg[3] <= 0;
-            braker_reg[0] <= 0; braker_reg[1] <= 0; braker_reg[2] <= 0; braker_reg[3] <= 0;
+            maker_reg_0 <= 0; maker_reg_1 <= 0; maker_reg_2 <= 0; maker_reg_3 <= 0;
+            braker_reg_0 <= 0; braker_reg_1 <= 0; braker_reg_2 <= 0; braker_reg_3 <= 0;
             
             SSD3 <= 8'b11111111; SSD2 <= 8'b11111111; SSD1 <= 8'b11111111; SSD0 <= 8'b11111111;
             LEDreg <= 8'b0;
@@ -173,7 +179,12 @@ module mastermind(
                     LEDreg <= 8'b00000000;
 
                     if (makerButtonRise) begin
-                        maker_reg[letter_count] <= letterIn;
+                        case (letter_count)
+                            0: maker_reg_0 <= letterIn;
+                            1: maker_reg_1 <= letterIn;
+                            2: maker_reg_2 <= letterIn;
+                            3: maker_reg_3 <= letterIn;
+                        endcase
                         if (letter_count == 3) begin
                             current_state <= 4'd4;
                             letter_count <= 0;
@@ -243,7 +254,7 @@ module mastermind(
                             SSD2 <= 8'b11111111; SSD1 <= 8'b11111111; SSD0 <= 8'b11111111;
                         end
                         1: begin 
-                            case (braker_reg[0])
+                            case (braker_reg_0)
                                 3'b000: SSD3 <= 8'b10001110; // F
                                 3'b001: SSD3 <= 8'b10001000; // A
                                 3'b010: SSD3 <= 8'b11000110; // C
@@ -266,7 +277,7 @@ module mastermind(
                             SSD1 <= 8'b11111111; SSD0 <= 8'b11111111;
                         end
                         2: begin 
-                            case (braker_reg[0])
+                            case (braker_reg_0)
                                 3'b000: SSD3 <= 8'b10001110; // F
                                 3'b001: SSD3 <= 8'b10001000; // A
                                 3'b010: SSD3 <= 8'b11000110; // C
@@ -276,7 +287,7 @@ module mastermind(
                                 3'b111: SSD3 <= 8'b11000001; // U
                                 default: SSD3 <= 8'b11111111; // OFF
                             endcase
-                            case (braker_reg[1])
+                            case (braker_reg_1)
                                 3'b000: SSD2 <= 8'b10001110; // F
                                 3'b001: SSD2 <= 8'b10001000; // A
                                 3'b010: SSD2 <= 8'b11000110; // C
@@ -299,7 +310,7 @@ module mastermind(
                             SSD0 <= 8'b11111111;
                         end
                         3: begin 
-                            case (braker_reg[0])
+                            case (braker_reg_0)
                                 3'b000: SSD3 <= 8'b10001110; // F
                                 3'b001: SSD3 <= 8'b10001000; // A
                                 3'b010: SSD3 <= 8'b11000110; // C
@@ -309,7 +320,7 @@ module mastermind(
                                 3'b111: SSD3 <= 8'b11000001; // U
                                 default: SSD3 <= 8'b11111111; // OFF
                             endcase
-                            case (braker_reg[1])
+                            case (braker_reg_1)
                                 3'b000: SSD2 <= 8'b10001110; // F
                                 3'b001: SSD2 <= 8'b10001000; // A
                                 3'b010: SSD2 <= 8'b11000110; // C
@@ -319,7 +330,7 @@ module mastermind(
                                 3'b111: SSD2 <= 8'b11000001; // U
                                 default: SSD2 <= 8'b11111111; // OFF
                             endcase
-                            case (braker_reg[2])
+                            case (braker_reg_2)
                                 3'b000: SSD1 <= 8'b10001110; // F
                                 3'b001: SSD1 <= 8'b10001000; // A
                                 3'b010: SSD1 <= 8'b11000110; // C
@@ -344,7 +355,12 @@ module mastermind(
                     LEDreg <= 8'b00000000;
 
                     if (brakerButtonRise) begin
-                        braker_reg[letter_count] <= letterIn;
+                        case (letter_count)
+                            0: braker_reg_0 <= letterIn;
+                            1: braker_reg_1 <= letterIn;
+                            2: braker_reg_2 <= letterIn;
+                            3: braker_reg_3 <= letterIn;
+                        endcase
                         if (letter_count == 3) begin
                             current_state <= 4'd7;
                             letter_count <= 0;
@@ -356,18 +372,18 @@ module mastermind(
                 end
 
                 4'd7: begin
-                    check_result[7] <= (braker_reg[0] == maker_reg[0]); 
-                    check_result[6] <= (braker_reg[0] == maker_reg[0] | braker_reg[0] == maker_reg[1] | 
-                                        braker_reg[0] == maker_reg[2] | braker_reg[0] == maker_reg[3]);
-                    check_result[5] <= (braker_reg[1] == maker_reg[1]); 
-                    check_result[4] <= (braker_reg[1] == maker_reg[0] | braker_reg[1] == maker_reg[1] | 
-                                        braker_reg[1] == maker_reg[2] | braker_reg[1] == maker_reg[3]);
-                    check_result[3] <= (braker_reg[2] == maker_reg[2]); 
-                    check_result[2] <= (braker_reg[2] == maker_reg[0] | braker_reg[2] == maker_reg[1] | 
-                                        braker_reg[2] == maker_reg[2] | braker_reg[2] == maker_reg[3]);
-                    check_result[1] <= (braker_reg[3] == maker_reg[3]); 
-                    check_result[0] <= (braker_reg[3] == maker_reg[0] | braker_reg[3] == maker_reg[1] | 
-                                        braker_reg[3] == maker_reg[2] | braker_reg[3] == maker_reg[3]);
+                    check_result[7] <= (braker_reg_0 == maker_reg_0); 
+                    check_result[6] <= (braker_reg_0 == maker_reg_0 | braker_reg_0 == maker_reg_1 | 
+                                        braker_reg_0 == maker_reg_2 | braker_reg_0 == maker_reg_3);
+                    check_result[5] <= (braker_reg_1 == maker_reg_1); 
+                    check_result[4] <= (braker_reg_1 == maker_reg_0 | braker_reg_1 == maker_reg_1 | 
+                                        braker_reg_1 == maker_reg_2 | braker_reg_1 == maker_reg_3);
+                    check_result[3] <= (braker_reg_2 == maker_reg_2); 
+                    check_result[2] <= (braker_reg_2 == maker_reg_0 | braker_reg_2 == maker_reg_1 | 
+                                        braker_reg_2 == maker_reg_2 | braker_reg_2 == maker_reg_3);
+                    check_result[1] <= (braker_reg_3 == maker_reg_3); 
+                    check_result[0] <= (braker_reg_3 == maker_reg_0 | braker_reg_3 == maker_reg_1 | 
+                                        braker_reg_3 == maker_reg_2 | braker_reg_3 == maker_reg_3);
                     LEDreg <= 8'b00000000;
                     current_state <= 4'd8;
                 end
@@ -390,7 +406,7 @@ module mastermind(
                     end
                     
                     // Display guess immediately
-                    case (braker_reg[0])
+                    case (braker_reg_0)
                         3'b000: SSD3 <= 8'b10001110; // F
                         3'b001: SSD3 <= 8'b10001000; // A
                         3'b010: SSD3 <= 8'b11000110; // C
@@ -400,7 +416,7 @@ module mastermind(
                         3'b111: SSD3 <= 8'b11000001; // U
                         default: SSD3 <= 8'b11111111; // OFF
                     endcase
-                    case (braker_reg[1])
+                    case (braker_reg_1)
                         3'b000: SSD2 <= 8'b10001110; // F
                         3'b001: SSD2 <= 8'b10001000; // A
                         3'b010: SSD2 <= 8'b11000110; // C
@@ -410,7 +426,7 @@ module mastermind(
                         3'b111: SSD2 <= 8'b11000001; // U
                         default: SSD2 <= 8'b11111111; // OFF
                     endcase
-                    case (braker_reg[2])
+                    case (braker_reg_2)
                         3'b000: SSD1 <= 8'b10001110; // F
                         3'b001: SSD1 <= 8'b10001000; // A
                         3'b010: SSD1 <= 8'b11000110; // C
@@ -420,7 +436,7 @@ module mastermind(
                         3'b111: SSD1 <= 8'b11000001; // U
                         default: SSD1 <= 8'b11111111; // OFF
                     endcase
-                    case (braker_reg[3])
+                    case (braker_reg_3)
                         3'b000: SSD0 <= 8'b10001110; // F
                         3'b001: SSD0 <= 8'b10001000; // A
                         3'b010: SSD0 <= 8'b11000110; // C
@@ -439,7 +455,7 @@ module mastermind(
                 4'd11: begin
                     // --- STATE 11: WAIT FOR USER (New State) ---
                     // Keep displays active (critical)
-                    case (braker_reg[0])
+                    case (braker_reg_0)
                         3'b000: SSD3 <= 8'b10001110; // F
                         3'b001: SSD3 <= 8'b10001000; // A
                         3'b010: SSD3 <= 8'b11000110; // C
@@ -449,7 +465,7 @@ module mastermind(
                         3'b111: SSD3 <= 8'b11000001; // U
                         default: SSD3 <= 8'b11111111; // OFF
                     endcase
-                    case (braker_reg[1])
+                    case (braker_reg_1)
                         3'b000: SSD2 <= 8'b10001110; // F
                         3'b001: SSD2 <= 8'b10001000; // A
                         3'b010: SSD2 <= 8'b11000110; // C
@@ -459,7 +475,7 @@ module mastermind(
                         3'b111: SSD2 <= 8'b11000001; // U
                         default: SSD2 <= 8'b11111111; // OFF
                     endcase
-                    case (braker_reg[2])
+                    case (braker_reg_2)
                         3'b000: SSD1 <= 8'b10001110; // F
                         3'b001: SSD1 <= 8'b10001000; // A
                         3'b010: SSD1 <= 8'b11000110; // C
@@ -469,7 +485,7 @@ module mastermind(
                         3'b111: SSD1 <= 8'b11000001; // U
                         default: SSD1 <= 8'b11111111; // OFF
                     endcase
-                    case (braker_reg[3])
+                    case (braker_reg_3)
                         3'b000: SSD0 <= 8'b10001110; // F
                         3'b001: SSD0 <= 8'b10001000; // A
                         3'b010: SSD0 <= 8'b11000110; // C
@@ -504,7 +520,7 @@ module mastermind(
                 end
 
                 4'd9: begin
-                    case (maker_reg[0])
+                    case (maker_reg_0)
                         3'b000: SSD3 <= 8'b10001110; // F
                         3'b001: SSD3 <= 8'b10001000; // A
                         3'b010: SSD3 <= 8'b11000110; // C
@@ -514,7 +530,7 @@ module mastermind(
                         3'b111: SSD3 <= 8'b11000001; // U
                         default: SSD3 <= 8'b11111111; // OFF
                     endcase
-                    case (maker_reg[1])
+                    case (maker_reg_1)
                         3'b000: SSD2 <= 8'b10001110; // F
                         3'b001: SSD2 <= 8'b10001000; // A
                         3'b010: SSD2 <= 8'b11000110; // C
@@ -524,7 +540,7 @@ module mastermind(
                         3'b111: SSD2 <= 8'b11000001; // U
                         default: SSD2 <= 8'b11111111; // OFF
                     endcase
-                    case (maker_reg[2])
+                    case (maker_reg_2)
                         3'b000: SSD1 <= 8'b10001110; // F
                         3'b001: SSD1 <= 8'b10001000; // A
                         3'b010: SSD1 <= 8'b11000110; // C
@@ -534,7 +550,7 @@ module mastermind(
                         3'b111: SSD1 <= 8'b11000001; // U
                         default: SSD1 <= 8'b11111111; // OFF
                     endcase
-                    case (maker_reg[3])
+                    case (maker_reg_3)
                         3'b000: SSD0 <= 8'b10001110; // F
                         3'b001: SSD0 <= 8'b10001000; // A
                         3'b010: SSD0 <= 8'b11000110; // C
