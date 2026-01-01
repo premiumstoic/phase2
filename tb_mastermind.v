@@ -6,7 +6,7 @@ module tb_mastermind;
     reg clk, rst, enterA, enterB;
     reg [2:0] letterIn;
     wire [7:0] LEDX;
-    wire [6:0] SSD3, SSD2, SSD1, SSD0;
+    wire [7:0] SSD3, SSD2, SSD1, SSD0;
 
     // --- Instantiate DUT ---
     mastermind uut (
@@ -15,10 +15,10 @@ module tb_mastermind;
         .SSD3(SSD3), .SSD2(SSD2), .SSD1(SSD1), .SSD0(SSD0)
     );
 
-    // --- 7-Segment Patterns (Parameterized - Update these if you change logic) ---
-    localparam SEG_0 = 7'b1000000; 
-    localparam SEG_1 = 7'b1111001;
-    localparam SEG_2 = 7'b0100100;
+    // --- 8-Bit Segment Patterns (Parameterized - Update these if you change logic) ---
+    localparam SEG_0 = 8'b11000000;  // 0
+    localparam SEG_1 = 8'b11111001;  // 1
+    localparam SEG_2 = 8'b10100100;  // 2
 
     // --- Clock Generation (2 Hz) ---
     initial begin
