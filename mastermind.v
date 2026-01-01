@@ -405,8 +405,6 @@ module mastermind(
             default: decoded_braker_3 = 7'b1111111;
         endcase
     end
-
-    // --- Output Logic (SSDs) ---
     always @(*) begin
         // Default values
         SSD3 = 7'b0000000; SSD2 = 7'b0000000; SSD1 = 7'b0000000; SSD0 = 7'b0000000;
@@ -425,22 +423,58 @@ module mastermind(
                 case (letter_counter)
                     0: begin
                         // Display current switches at first slot
-                        SSD3 = decoded_letterIn;
+                        case (letterIn)
+                            3'b000: SSD3 = 7'b0001110; // F
+                            3'b001: SSD3 = 7'b0001000; // A
+                            3'b010: SSD3 = 7'b1000110; // C
+                            3'b011: SSD3 = 7'b0000110; // E
+                            3'b100: SSD3 = 7'b0001001; // H
+                            3'b110: SSD3 = 7'b1000111; // L
+                            3'b111: SSD3 = 7'b1000001; // U
+                            default: SSD3 = 7'b1111111; // OFF
+                        endcase
                     end
                     1: begin
                         SSD3 = 7'b0111111; // Dash
-                        SSD2 = decoded_letterIn;
+                        case (letterIn)
+                            3'b000: SSD2 = 7'b0001110; // F
+                            3'b001: SSD2 = 7'b0001000; // A
+                            3'b010: SSD2 = 7'b1000110; // C
+                            3'b011: SSD2 = 7'b0000110; // E
+                            3'b100: SSD2 = 7'b0001001; // H
+                            3'b110: SSD2 = 7'b1000111; // L
+                            3'b111: SSD2 = 7'b1000001; // U
+                            default: SSD2 = 7'b1111111; // OFF
+                        endcase
                     end
                     2: begin
                         SSD3 = 7'b0111111; // Dash
                         SSD2 = 7'b0111111; // Dash
-                        SSD1 = decoded_letterIn;
+                        case (letterIn)
+                            3'b000: SSD1 = 7'b0001110; // F
+                            3'b001: SSD1 = 7'b0001000; // A
+                            3'b010: SSD1 = 7'b1000110; // C
+                            3'b011: SSD1 = 7'b0000110; // E
+                            3'b100: SSD1 = 7'b0001001; // H
+                            3'b110: SSD1 = 7'b1000111; // L
+                            3'b111: SSD1 = 7'b1000001; // U
+                            default: SSD1 = 7'b1111111; // OFF
+                        endcase
                     end
                     3: begin
                         SSD3 = 7'b0111111; // Dash
                         SSD2 = 7'b0111111; // Dash
                         SSD1 = 7'b0111111; // Dash
-                        SSD0 = decoded_letterIn;
+                        case (letterIn)
+                            3'b000: SSD0 = 7'b0001110; // F
+                            3'b001: SSD0 = 7'b0001000; // A
+                            3'b010: SSD0 = 7'b1000110; // C
+                            3'b011: SSD0 = 7'b0000110; // E
+                            3'b100: SSD0 = 7'b0001001; // H
+                            3'b110: SSD0 = 7'b1000111; // L
+                            3'b111: SSD0 = 7'b1000001; // U
+                            default: SSD0 = 7'b1111111; // OFF
+                        endcase
                     end
                     default: begin
                         // 4 or more: keep defaults (OFF)
@@ -478,28 +512,118 @@ module mastermind(
             S6_BREAKER_INPUT: begin
                 case (letter_counter)
                     0: begin
-                        SSD3 = decoded_letterIn;
+                        case (letterIn)
+                            3'b000: SSD3 = 7'b0001110; // F
+                            3'b001: SSD3 = 7'b0001000; // A
+                            3'b010: SSD3 = 7'b1000110; // C
+                            3'b011: SSD3 = 7'b0000110; // E
+                            3'b100: SSD3 = 7'b0001001; // H
+                            3'b110: SSD3 = 7'b1000111; // L
+                            3'b111: SSD3 = 7'b1000001; // U
+                            default: SSD3 = 7'b1111111; // OFF
+                        endcase
                         SSD2 = 7'b0000000;
                         SSD1 = 7'b0000000;
                         SSD0 = 7'b0000000;
                     end
                     1: begin
-                        SSD3 = decoded_braker_0;
-                        SSD2 = decoded_letterIn;
+                        case (braker_reg[0])
+                            3'b000: SSD3 = 7'b0001110; // F
+                            3'b001: SSD3 = 7'b0001000; // A
+                            3'b010: SSD3 = 7'b1000110; // C
+                            3'b011: SSD3 = 7'b0000110; // E
+                            3'b100: SSD3 = 7'b0001001; // H
+                            3'b110: SSD3 = 7'b1000111; // L
+                            3'b111: SSD3 = 7'b1000001; // U
+                            default: SSD3 = 7'b1111111; // OFF
+                        endcase
+                        case (letterIn)
+                            3'b000: SSD2 = 7'b0001110; // F
+                            3'b001: SSD2 = 7'b0001000; // A
+                            3'b010: SSD2 = 7'b1000110; // C
+                            3'b011: SSD2 = 7'b0000110; // E
+                            3'b100: SSD2 = 7'b0001001; // H
+                            3'b110: SSD2 = 7'b1000111; // L
+                            3'b111: SSD2 = 7'b1000001; // U
+                            default: SSD2 = 7'b1111111; // OFF
+                        endcase
                         SSD1 = 7'b0000000;
                         SSD0 = 7'b0000000;
                     end
                     2: begin
-                        SSD3 = decoded_braker_0;
-                        SSD2 = decoded_braker_1;
-                        SSD1 = decoded_letterIn;
+                        case (braker_reg[0])
+                            3'b000: SSD3 = 7'b0001110; // F
+                            3'b001: SSD3 = 7'b0001000; // A
+                            3'b010: SSD3 = 7'b1000110; // C
+                            3'b011: SSD3 = 7'b0000110; // E
+                            3'b100: SSD3 = 7'b0001001; // H
+                            3'b110: SSD3 = 7'b1000111; // L
+                            3'b111: SSD3 = 7'b1000001; // U
+                            default: SSD3 = 7'b1111111; // OFF
+                        endcase
+                        case (braker_reg[1])
+                            3'b000: SSD2 = 7'b0001110; // F
+                            3'b001: SSD2 = 7'b0001000; // A
+                            3'b010: SSD2 = 7'b1000110; // C
+                            3'b011: SSD2 = 7'b0000110; // E
+                            3'b100: SSD2 = 7'b0001001; // H
+                            3'b110: SSD2 = 7'b1000111; // L
+                            3'b111: SSD2 = 7'b1000001; // U
+                            default: SSD2 = 7'b1111111; // OFF
+                        endcase
+                        case (letterIn)
+                            3'b000: SSD1 = 7'b0001110; // F
+                            3'b001: SSD1 = 7'b0001000; // A
+                            3'b010: SSD1 = 7'b1000110; // C
+                            3'b011: SSD1 = 7'b0000110; // E
+                            3'b100: SSD1 = 7'b0001001; // H
+                            3'b110: SSD1 = 7'b1000111; // L
+                            3'b111: SSD1 = 7'b1000001; // U
+                            default: SSD1 = 7'b1111111; // OFF
+                        endcase
                         SSD0 = 7'b0000000;
                     end
                     3: begin
-                        SSD3 = decoded_braker_0;
-                        SSD2 = decoded_braker_1;
-                        SSD1 = decoded_braker_2;
-                        SSD0 = decoded_letterIn;
+                        case (braker_reg[0])
+                            3'b000: SSD3 = 7'b0001110; // F
+                            3'b001: SSD3 = 7'b0001000; // A
+                            3'b010: SSD3 = 7'b1000110; // C
+                            3'b011: SSD3 = 7'b0000110; // E
+                            3'b100: SSD3 = 7'b0001001; // H
+                            3'b110: SSD3 = 7'b1000111; // L
+                            3'b111: SSD3 = 7'b1000001; // U
+                            default: SSD3 = 7'b1111111; // OFF
+                        endcase
+                        case (braker_reg[1])
+                            3'b000: SSD2 = 7'b0001110; // F
+                            3'b001: SSD2 = 7'b0001000; // A
+                            3'b010: SSD2 = 7'b1000110; // C
+                            3'b011: SSD2 = 7'b0000110; // E
+                            3'b100: SSD2 = 7'b0001001; // H
+                            3'b110: SSD2 = 7'b1000111; // L
+                            3'b111: SSD2 = 7'b1000001; // U
+                            default: SSD2 = 7'b1111111; // OFF
+                        endcase
+                        case (braker_reg[2])
+                            3'b000: SSD1 = 7'b0001110; // F
+                            3'b001: SSD1 = 7'b0001000; // A
+                            3'b010: SSD1 = 7'b1000110; // C
+                            3'b011: SSD1 = 7'b0000110; // E
+                            3'b100: SSD1 = 7'b0001001; // H
+                            3'b110: SSD1 = 7'b1000111; // L
+                            3'b111: SSD1 = 7'b1000001; // U
+                            default: SSD1 = 7'b1111111; // OFF
+                        endcase
+                        case (letterIn)
+                            3'b000: SSD0 = 7'b0001110; // F
+                            3'b001: SSD0 = 7'b0001000; // A
+                            3'b010: SSD0 = 7'b1000110; // C
+                            3'b011: SSD0 = 7'b0000110; // E
+                            3'b100: SSD0 = 7'b0001001; // H
+                            3'b110: SSD0 = 7'b1000111; // L
+                            3'b111: SSD0 = 7'b1000001; // U
+                            default: SSD0 = 7'b1111111; // OFF
+                        endcase
                     end
                     default: begin
                     end
@@ -508,18 +632,90 @@ module mastermind(
 
             // --- Display Logic for Game Update (show last guess + LEDs) ---
             S8_UPDATE: begin
-                SSD3 = decoded_braker_0;
-                SSD2 = decoded_braker_1;
-                SSD1 = decoded_braker_2;
-                SSD0 = decoded_braker_3;
+                case (braker_reg[0])
+                    3'b000: SSD3 = 7'b0001110; // F
+                    3'b001: SSD3 = 7'b0001000; // A
+                    3'b010: SSD3 = 7'b1000110; // C
+                    3'b011: SSD3 = 7'b0000110; // E
+                    3'b100: SSD3 = 7'b0001001; // H
+                    3'b110: SSD3 = 7'b1000111; // L
+                    3'b111: SSD3 = 7'b1000001; // U
+                    default: SSD3 = 7'b1111111; // OFF
+                endcase
+                case (braker_reg[1])
+                    3'b000: SSD2 = 7'b0001110; // F
+                    3'b001: SSD2 = 7'b0001000; // A
+                    3'b010: SSD2 = 7'b1000110; // C
+                    3'b011: SSD2 = 7'b0000110; // E
+                    3'b100: SSD2 = 7'b0001001; // H
+                    3'b110: SSD2 = 7'b1000111; // L
+                    3'b111: SSD2 = 7'b1000001; // U
+                    default: SSD2 = 7'b1111111; // OFF
+                endcase
+                case (braker_reg[2])
+                    3'b000: SSD1 = 7'b0001110; // F
+                    3'b001: SSD1 = 7'b0001000; // A
+                    3'b010: SSD1 = 7'b1000110; // C
+                    3'b011: SSD1 = 7'b0000110; // E
+                    3'b100: SSD1 = 7'b0001001; // H
+                    3'b110: SSD1 = 7'b1000111; // L
+                    3'b111: SSD1 = 7'b1000001; // U
+                    default: SSD1 = 7'b1111111; // OFF
+                endcase
+                case (braker_reg[3])
+                    3'b000: SSD0 = 7'b0001110; // F
+                    3'b001: SSD0 = 7'b0001000; // A
+                    3'b010: SSD0 = 7'b1000110; // C
+                    3'b011: SSD0 = 7'b0000110; // E
+                    3'b100: SSD0 = 7'b0001001; // H
+                    3'b110: SSD0 = 7'b1000111; // L
+                    3'b111: SSD0 = 7'b1000001; // U
+                    default: SSD0 = 7'b1111111; // OFF
+                endcase
             end
 
             // --- Display Logic for Result (show secret + LEDs) ---
             S9_RESULT: begin
-                SSD3 = decoded_maker_0;
-                SSD2 = decoded_maker_1;
-                SSD1 = decoded_maker_2;
-                SSD0 = decoded_maker_3;
+                case (maker_reg[0])
+                    3'b000: SSD3 = 7'b0001110; // F
+                    3'b001: SSD3 = 7'b0001000; // A
+                    3'b010: SSD3 = 7'b1000110; // C
+                    3'b011: SSD3 = 7'b0000110; // E
+                    3'b100: SSD3 = 7'b0001001; // H
+                    3'b110: SSD3 = 7'b1000111; // L
+                    3'b111: SSD3 = 7'b1000001; // U
+                    default: SSD3 = 7'b1111111; // OFF
+                endcase
+                case (maker_reg[1])
+                    3'b000: SSD2 = 7'b0001110; // F
+                    3'b001: SSD2 = 7'b0001000; // A
+                    3'b010: SSD2 = 7'b1000110; // C
+                    3'b011: SSD2 = 7'b0000110; // E
+                    3'b100: SSD2 = 7'b0001001; // H
+                    3'b110: SSD2 = 7'b1000111; // L
+                    3'b111: SSD2 = 7'b1000001; // U
+                    default: SSD2 = 7'b1111111; // OFF
+                endcase
+                case (maker_reg[2])
+                    3'b000: SSD1 = 7'b0001110; // F
+                    3'b001: SSD1 = 7'b0001000; // A
+                    3'b010: SSD1 = 7'b1000110; // C
+                    3'b011: SSD1 = 7'b0000110; // E
+                    3'b100: SSD1 = 7'b0001001; // H
+                    3'b110: SSD1 = 7'b1000111; // L
+                    3'b111: SSD1 = 7'b1000001; // U
+                    default: SSD1 = 7'b1111111; // OFF
+                endcase
+                case (maker_reg[3])
+                    3'b000: SSD0 = 7'b0001110; // F
+                    3'b001: SSD0 = 7'b0001000; // A
+                    3'b010: SSD0 = 7'b1000110; // C
+                    3'b011: SSD0 = 7'b0000110; // E
+                    3'b100: SSD0 = 7'b0001001; // H
+                    3'b110: SSD0 = 7'b1000111; // L
+                    3'b111: SSD0 = 7'b1000001; // U
+                    default: SSD0 = 7'b1111111; // OFF
+                endcase
             end
 
             // --- Display Logic for Score Decision (ScoreA - ScoreB) ---
