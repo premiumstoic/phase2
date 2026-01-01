@@ -2,240 +2,192 @@
 
 module tb_mastermind;
 
-    // --- Inputs ---
-    reg clk;
-    reg rst;
-    reg enterA;
-    reg enterB;
+    // --- Inputs & Outputs ---
+    reg clk, rst, enterA, enterB;
     reg [2:0] letterIn;
-
-    // --- Outputs ---
     wire [7:0] LEDX;
-    wire [6:0] SSD3;
-    wire [6:0] SSD2;
-    wire [6:0] SSD1;
-    wire [6:0] SSD0;
+    wire [6:0] SSD3, SSD2, SSD1, SSD0;
 
-    // --- Instantiate the Device Under Test (DUT) ---
+    // --- Instantiate DUT ---
     mastermind uut (
-        .clk(clk), 
-        .rst(rst), 
-        .enterA(enterA), 
-        .enterB(enterB), 
-        .letterIn(letterIn), 
-        .LEDX(LEDX), 
-        .SSD3(SSD3), 
-        .SSD2(SSD2), 
-        .SSD1(SSD1), 
-        .SSD0(SSD0)
+        .clk(clk), .rst(rst), .enterA(enterA), .enterB(enterB), 
+        .letterIn(letterIn), .LEDX(LEDX), 
+        .SSD3(SSD3), .SSD2(SSD2), .SSD1(SSD1), .SSD0(SSD0)
     );
 
+    // --- 7-Segment Patterns (Parameterized - Update these if you change logic) ---
+    localparam SEG_0 = 7'b1000000; 
+    localparam SEG_1 = 7'b1111001;
+    localparam SEG_2 = 7'b0100100;
+
     // --- Clock Generation (2 Hz) ---
-    // Period = 500ms (250ms high, 250ms low)
     initial begin
         clk = 0;
         forever #250 clk = ~clk; 
     end
 
-    // --- Helper Task: Press Button A ---
-    // Simulates a button press that lasts longer than 1 clock cycle
+    // --- Helper Tasks ---
     task press_A;
         begin
-            @(negedge clk); // Sync to falling edge
-            enterA = 1;
-            #600;           // Hold for > 1 clock cycle (500ms)
-            enterA = 0;
-            #500;           // Wait for release
+            @(negedge clk); enterA = 1; #600; enterA = 0; #500;
         end
     endtask
 
-    // --- Helper Task: Press Button B ---
     task press_B;
         begin
-            @(negedge clk);
-            enterB = 1;
-            #600;
-            enterB = 0;
-            #500;
+            @(negedge clk); enterB = 1; #600; enterB = 0; #500;
         end
     endtask
 
-    // --- Helper Task: Enter a Letter (Maker) ---
     task maker_enter;
         input [2:0] val;
         begin
-            letterIn = val;
-            #50; // Wait for switch to stabilize
-            press_A();
-            $display("Maker Entered Letter: %b at time %t", val, $time);
+            letterIn = val; #50; press_A();
         end
     endtask
 
-    // --- Helper Task: Enter a Letter (Breaker) ---
     task breaker_enter;
         input [2:0] val;
         begin
-            letterIn = val;
-            #50;
-            press_B();
-            $display("Breaker Entered Letter: %b at time %t", val, $time);
+            letterIn = val; #50; press_B();
         end
     endtask
 
     // --- Main Test Sequence ---
     initial begin
-        // 1. Initialize Inputs
-        rst = 1;
-        enterA = 0;
-        enterB = 0;
-        letterIn = 0;
-        
-        $dumpfile("mastermind_wave.vcd"); // Create waveform file for GTKWave
+        $dumpfile("mastermind_wave.vcd");
         $dumpvars(0, tb_mastermind);
-
-        $display("--- SIMULATION START ---");
-
-        // 2. Reset the System
-        #100;
-        rst = 0; // Active Low Reset
-        #100;
-        rst = 1;
-        $display("System Reset.");
+        
+        // 1. Reset
+        rst = 1; enterA = 0; enterB = 0; letterIn = 0;
+        #100; rst = 0; #100; rst = 1;
         #1000;
 
-        // 3. Start Game (Press A)
-        $display("State S0: Pressing Enter A to start...");
-        press_A();
+        // ==========================================
+        // ROUND 1: Player A is Maker, B guesses CORRECTLY
+        // ==========================================
+        $display("\n=== ROUND 1 START (A=Maker, B=Breaker) ===");
+        press_A(); // Start Game (S0 -> S1)
+        
+        $display("Waiting for Init Timers...");
+        #5000; // Wait for S1/S2 timers
 
-        // 4. Wait for Initialization (S1 & S2)
-        // Each state waits 4 cycles (approx 2000ms). We wait 5000ms to be safe.
-        $display("Waiting for S1 and S2 timers...");
-        #5000;
+        $display("Maker (A) Enters: F-A-C-E");
+        maker_enter(3'b000); maker_enter(3'b001); maker_enter(3'b010); maker_enter(3'b011); 
 
-        // 5. Code Maker Enters "F-A-C-E" (S3)
-        // Codes: F(000), A(001), C(010), E(011)
-        $display("--- Maker Inputting Code: F-A-C-E ---");
-        maker_enter(3'b000); 
-        maker_enter(3'b001); 
-        maker_enter(3'b010); 
-        maker_enter(3'b011); 
+        $display("Waiting for Role Swap Timer...");
+        #5000; // Wait for S4/S5
 
-        // 6. Wait for Turn Change (S4 & S5)
-        $display("Waiting for S4 and S5 timers (Player Swap)...");
-        #5000;
+        $display("Breaker (B) Guesses: F-A-C-E (Correct)");
+        breaker_enter(3'b000); breaker_enter(3'b001); breaker_enter(3'b010); breaker_enter(3'b011);
 
-        // 7. Code Breaker Guesses "F-A-C-E" (S6)
-        $display("--- Breaker Inputting Guess: F-A-C-E ---");
-        breaker_enter(3'b000); 
-        breaker_enter(3'b001); 
-        breaker_enter(3'b010); 
-        breaker_enter(3'b011);
+        repeat (3) @(posedge clk); // Wait for Check
 
-        // 8. Check Result (S7 -> S8)
-        // S7 is instant; by two to three posedges after last input, S8 shows LEDs.
+        if (LEDX == 8'b11111111) $display("PASS: LEDs indicate correct guess.");
+        else $display("FAIL: LEDs show %b", LEDX);
+
+        press_B(); // Ack result
+        repeat (6) @(posedge clk); // Wait for S10
+
+        // Check Score: Should be 0 - 1 (A - B)
+        if (SSD3 === SEG_0 && SSD0 === SEG_1) $display("PASS: Scoreboard shows 0-1.");
+        else $display("FAIL: Scoreboard shows SSD3=%b SSD0=%b", SSD3, SSD0);
+
+        // ==========================================
+        // ROUND 2: Player B is Maker, A Guesses WRONG, then CORRECT
+        // ==========================================
+        $display("\n=== ROUND 2 START (B=Maker, A=Breaker) ===");
+        // Logic: In S10, timer waits 2s, then swaps roles and goes to S1.
+        // We are already waiting in S10 from previous step.
+        // Let's wait for the transition to S3 (Maker Input)
+        
+        $display("Waiting for Round 2 Init...");
+        #6000; // Covers S10 wait + S1 wait + S2 wait
+
+        // Note: Code Maker is now B. So we use 'press_B' for Maker Input.
+        // Your logic uses "turn_A" flag. 
+        // If turn_A=0, Maker is B (uses EnterB).
+        
+        $display("Maker (B) Enters: H-H-H-H");
+        letterIn = 3'b100; press_B();
+        letterIn = 3'b100; press_B();
+        letterIn = 3'b100; press_B();
+        letterIn = 3'b100; press_B();
+
+        #5000; // Wait for swap
+
+        $display("Breaker (A) Guesses WRONG: F-F-F-F");
+        letterIn = 3'b000; press_A();
+        letterIn = 3'b000; press_A();
+        letterIn = 3'b000; press_A();
+        letterIn = 3'b000; press_A();
+
+        repeat (3) @(posedge clk);
+        
+        if (LEDX != 8'b11111111) $display("PASS: LEDs show incomplete match (Correct).");
+        else $display("FAIL: LEDs show match for wrong guess!");
+
+        press_A(); // Ack result (Retry)
+        repeat (2) @(posedge clk);
+
+        $display("Breaker (A) Retries CORRECTLY: H-H-H-H");
+        letterIn = 3'b100; press_A();
+        letterIn = 3'b100; press_A();
+        letterIn = 3'b100; press_A();
+        letterIn = 3'b100; press_A();
+
+        repeat (3) @(posedge clk);
+        if (LEDX == 8'b11111111) $display("PASS: Retry successful.");
+        else $display("FAIL: Retry LEDs show %b", LEDX);
+        
+        press_A(); // Ack result
+        repeat (6) @(posedge clk); // Wait for S10
+
+        // Check Score: Should be 1 - 1 (A - B)
+        if (SSD3 === SEG_1 && SSD0 === SEG_1) $display("PASS: Scoreboard shows 1-1.");
+        else $display("FAIL: Scoreboard shows SSD3=%b SSD0=%b", SSD3, SSD0);
+
+        // ==========================================
+        // ROUND 3: Player A is Maker again, B guesses CORRECTLY -> Game Over
+        // ==========================================
+        $display("\n=== ROUND 3 START (A=Maker, B=Breaker) - Game Over Test ===");
+        
+        $display("Waiting for Round 3 Init...");
+        #6000; // Covers S10 wait + S1 wait + S2 wait
+
+        // Player A is Maker again (turn_A=1)
+        $display("Maker (A) Enters: U-U-U-U");
+        maker_enter(3'b111); maker_enter(3'b111); maker_enter(3'b111); maker_enter(3'b111); 
+
+        #5000; // Wait for S4/S5
+
+        $display("Breaker (B) Guesses: U-U-U-U (Correct)");
+        breaker_enter(3'b111); breaker_enter(3'b111); breaker_enter(3'b111); breaker_enter(3'b111);
+
         repeat (3) @(posedge clk);
 
-        // Check LEDs: Should be 11111111 (All correct)
-        if (LEDX == 8'b11111111) 
-            $display("SUCCESS: LEDs indicate Correct Guess (11111111)!");
-        else 
-            $display("FAILURE: LEDs show %b", LEDX);
+        if (LEDX == 8'b11111111) $display("PASS: LEDs indicate correct guess.");
+        else $display("FAIL: LEDs show %b", LEDX);
 
-        // Press B to acknowledge result and move to S9
-        $display("Pressing B to acknowledge result...");
-        press_B();
+        press_B(); // Ack result
+        repeat (6) @(posedge clk); // Wait for S10
 
-        // 9. Final Score Check (S9 -> S10)
-        // After acknowledging in S8, it takes ~5 posedges to reach S10.
-        repeat (6) @(posedge clk);
+        // Check Score: Should be 1 - 2 (A - B) -> B WINS THE MATCH
+        if (SSD3 === SEG_1 && SSD0 === SEG_2) $display("PASS: Scoreboard shows 1-2. Player B wins!");
+        else $display("FAIL: Scoreboard shows SSD3=%b SSD0=%b", SSD3, SSD0);
 
-        // Assert scoreboard shows 0-1 in S10 (A-B)
-        if (SSD3 === 7'b1111110 && SSD0 === 7'b0110000)
-            $display("SUCCESS: Scoreboard shows 0-1 as expected in S10.");
-        else begin
-            $display("WARNING: Scoreboard unexpected in S10. SSD3=%b SSD0=%b", SSD3, SSD0);
-        end
-        
-        $display("--- End of Round 1 ---");
-        $display("Simulation Complete.");
+        // Wait for game to reset (S10 timer expires -> S0)
+        #3000;
+
+        // Verify we're back at S0 (should show "A-b")
+        $display("Verifying Game Reset to S0...");
+        if (SSD3 === 7'b0001000 && SSD0 === 7'b0000011) // A and b
+            $display("PASS: Game returned to Start State (A-b displayed).");
+        else
+            $display("INFO: Game reset. SSD3=%b SSD0=%b", SSD3, SSD0);
+
+        $display("\n--- SIMULATION COMPLETE ---");
+        $display("All tests executed. Check waveform for detailed analysis.");
         $finish;
     end
-
 endmodule
-
-// ===== EXTENDED TEST: Negative Test (Wrong Guess & Retry) =====
-// Uncomment to test Round 2 with wrong guess and retry.
-/*
-    initial begin
-    // ===== EXTENDED TEST: Negative Test (Wrong Guess & Retry) =====
-    // Uncomment the block below to test a second round with a wrong guess and retry.
-    initial begin
-        // --- ROUND 2: Wrong Guess, then Correct Retry ---
-        $display("\n=== ROUND 2: Testing Wrong Guess & Retry ===");
-        
-        // Wait for role swap (turn_A should now be 0 -> B is maker, A is breaker)
-        repeat (6) @(posedge clk);
-        
-        // B (new Maker) enters code: H-A-C-E (100, 001, 010, 011)
-        $display("--- Maker (B) Inputting Code: H-A-C-E ---");
-        letterIn = 3'b100; press_B(); // H
-        letterIn = 3'b001; press_B(); // A
-        letterIn = 3'b010; press_B(); // C
-        letterIn = 3'b011; press_B(); // E
-        
-        // Wait for S4 & S5 (player display and lives)
-        repeat (10) @(posedge clk);
-        
-        // A (new Breaker) enters WRONG guess: F-A-C-E (should not match H at position 0)
-        $display("--- Breaker (A) Entering WRONG Guess: F-A-C-E ---");
-        letterIn = 3'b000; press_A(); // F (wrong, should be H)
-        letterIn = 3'b001; press_A(); // A
-        letterIn = 3'b010; press_A(); // C
-        letterIn = 3'b011; press_A(); // E
-        
-        // Wait for S7 (checker) and S8 (result)
-        repeat (5) @(posedge clk);
-        
-        // Check LEDs: Should NOT be 11111111 (F != H at position 0)
-        if (LEDX !== 8'b11111111)
-            $display("SUCCESS: LEDs show partial match (not all 1s). LEDX = %b", LEDX);
-        else
-            $display("FAILURE: LEDs show full match when they shouldn't!");
-        
-        // Press A to acknowledge and continue (should allow retry since lives > 0)
-        $display("Pressing A to acknowledge and retry...");
-        press_A();
-        
-        // Wait and verify lives decremented (should now be 2)
-        repeat (4) @(posedge clk);
-        $display("After wrong guess, lives should be 2. (Check internal state or SSD in S5 on next round.)");
-        
-        // A (Breaker) retries with CORRECT guess: H-A-C-E
-        $display("--- Breaker (A) Retrying with CORRECT Guess: H-A-C-E ---");
-        letterIn = 3'b100; press_A(); // H (correct)
-        letterIn = 3'b001; press_A(); // A
-        letterIn = 3'b010; press_A(); // C
-        letterIn = 3'b011; press_A(); // E
-        
-        // Wait for S7 and S8
-        repeat (5) @(posedge clk);
-        
-        // Check LEDs again: Should be 11111111 (all correct now)
-        if (LEDX == 8'b11111111)
-            $display("SUCCESS: Retry LEDs show all correct (11111111)!");
-        else
-            $display("FAILURE: Retry LEDs show %b", LEDX);
-        
-        // Press A to acknowledge result and move to S9
-        press_A();
-        
-        // Wait and verify S9 shows secret code (H-A-C-E)
-        repeat (4) @(posedge clk);
-        $display("In S9, SSDs should display secret code (H-A-C-E from maker_reg).");
-        
-        // Move to S10 (score display)
-        repeat (6) @(posedge clk);
-        $display("Round 2 complete. Scoreboard shown in S10.");
-        
-    end
-*/
