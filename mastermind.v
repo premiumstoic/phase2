@@ -76,7 +76,12 @@ module mastermind(
                     SSD0 <= 8'b10000011; // b
                     LEDreg <= 8'b00000000;
                     
-                    if (enterA || enterB) begin
+                    if (enterA) begin
+                        turn_A <= 1;          // Player A becomes Code Maker
+                        current_state <= 4'd1;
+                    end
+                    else if (enterB) begin
+                        turn_A <= 0;          // Player B becomes Code Maker
                         current_state <= 4'd1;
                     end
                 end
