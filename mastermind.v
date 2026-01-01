@@ -33,12 +33,10 @@ module mastermind(
     assign makerButtonRise = (turn_A & enterA & ~prev_enterA) | (~turn_A & enterB & ~prev_enterB);
     assign brakerButtonRise = (turn_A & enterB & ~prev_enterB) | (~turn_A & enterA & ~prev_enterA);
 
-    // --- Helper Logic: Check for Win ---
     wire is_correct;
     assign is_correct = (check_result[7] & check_result[6]) & (check_result[5] & check_result[4]) &
                         (check_result[3] & check_result[2]) & (check_result[1] & check_result[0]);
 
-    // --- MAIN SINGLE PROCESS BLOCK ---
     always @(posedge clk or negedge rst) begin
         if (!rst) begin
             current_state <= 4'd0;
@@ -63,10 +61,6 @@ module mastermind(
             prev_enterA <= enterA;
             prev_enterB <= enterB;
 
-            if (current_state != 4'd8 && current_state != 4'd9 && current_state != 4'd11) begin
-                LEDreg <= 8'b00000000;
-            end
-
             case (current_state)
                 
                 4'd0: begin
@@ -74,6 +68,7 @@ module mastermind(
                     SSD2 <= 8'b10111111; // -
                     SSD1 <= 8'b11111111; // Off
                     SSD0 <= 8'b10000011; // b
+                    LEDreg <= 8'b00000000;
                     
                     if (enterA || enterB) begin
                         current_state <= 4'd1;
@@ -85,6 +80,7 @@ module mastermind(
                     SSD2 <= 8'b10111111; // -
                     SSD1 <= 8'b11111111; // Off
                     SSD0 <= 8'b11000000; // 0
+                    LEDreg <= 8'b00000000;
                     
                     if (timer_counter >= 3) begin
                         timer_counter <= 0;
@@ -105,6 +101,7 @@ module mastermind(
                     else begin
                         SSD0 <= 8'b10000011; // b
                     end
+                    LEDreg <= 8'b00000000;
                     
                     if (timer_counter >= 3) begin
                         timer_counter <= 0;
@@ -173,6 +170,7 @@ module mastermind(
                             endcase
                         end
                     endcase
+                    LEDreg <= 8'b00000000;
 
                     if (makerButtonRise) begin
                         maker_reg[letter_count] <= letterIn;
@@ -196,6 +194,7 @@ module mastermind(
                     else begin
                         SSD0 <= 8'b10001000; // A
                     end
+                    LEDreg <= 8'b00000000;
                     
                     if (timer_counter >= 3) begin
                         timer_counter <= 0;
@@ -216,6 +215,7 @@ module mastermind(
                         2'd1: SSD0 <= 8'b11111001; // 1
                         default: SSD0 <= 8'b10111111; // -
                     endcase
+                    LEDreg <= 8'b00000000;
 
                     if (timer_counter >= 3) begin
                         timer_counter <= 0;
@@ -341,6 +341,7 @@ module mastermind(
                             endcase
                         end
                     endcase
+                    LEDreg <= 8'b00000000;
 
                     if (brakerButtonRise) begin
                         braker_reg[letter_count] <= letterIn;
@@ -367,6 +368,7 @@ module mastermind(
                     check_result[1] <= (braker_reg[3] == maker_reg[3]); 
                     check_result[0] <= (braker_reg[3] == maker_reg[0] | braker_reg[3] == maker_reg[1] | 
                                         braker_reg[3] == maker_reg[2] | braker_reg[3] == maker_reg[3]);
+                    LEDreg <= 8'b00000000;
                     current_state <= 4'd8;
                 end
 
@@ -568,6 +570,7 @@ module mastermind(
                         2'd2: SSD0 <= 8'b10100100; // 2
                         default: SSD0 <= 8'b11000000;
                     endcase
+                    LEDreg <= 8'b00000000;
 
                     if (timer_counter >= 3) begin
                         timer_counter <= 0;
