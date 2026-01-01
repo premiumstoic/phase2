@@ -4,18 +4,16 @@ module mastermind(
     
     input enterA,
     input enterB,
-    input [2:0] letterIn,   // Switches
+    input [2:0] letterIn,
    
     output reg [7:0] LEDX,
-    output reg [7:0] SSD3,  // UPDATED: 8-bit output
-    output reg [7:0] SSD2,  // UPDATED: 8-bit output
-    output reg [7:0] SSD1,  // UPDATED: 8-bit output
-    output reg [7:0] SSD0   // UPDATED: 8-bit output
+    output reg [7:0] SSD3,
+    output reg [7:0] SSD2,
+    output reg [7:0] SSD1,
+    output reg [7:0] SSD0   
     );
 
     reg [3:0] current_state;
-
-    // --- Game Variables ---
     reg [2:0] timer_counter;
     reg [1:0] letter_count;
     reg [1:0] score_A;
@@ -23,7 +21,6 @@ module mastermind(
     reg [1:0] lives;
     reg turn_A;
 
-    // --- Internal Registers ---
     reg [2:0] maker_reg [3:0];
     reg [2:0] braker_reg [3:0];
     reg [7:0] check_result;
@@ -31,7 +28,6 @@ module mastermind(
     reg prev_enterB;
     reg state_initialized;
 
-    // --- Edge Detection ---
     wire makerButtonRise;
     wire brakerButtonRise;
 
@@ -40,10 +36,8 @@ module mastermind(
 
     // --- Helper Logic: Check for Win ---
     wire is_correct;
-    assign is_correct = (check_result[7] & check_result[6]) &
-                        (check_result[5] & check_result[4]) &
-                        (check_result[3] & check_result[2]) &
-                        (check_result[1] & check_result[0]);
+    assign is_correct = (check_result[7] & check_result[6]) & (check_result[5] & check_result[4]) &
+                        (check_result[3] & check_result[2]) & (check_result[1] & check_result[0]);
 
     // --- MAIN SINGLE PROCESS BLOCK ---
     always @(posedge clk or negedge rst) begin
@@ -71,8 +65,9 @@ module mastermind(
             prev_enterA <= enterA;
             prev_enterB <= enterB;
 
-            if (current_state != 4'd8 && current_state != 4'd9)
+            if (current_state != 4'd8 && current_state != 4'd9) begin
                 LEDX <= 8'b00000000;
+            end
 
             case (current_state)
                 
@@ -82,8 +77,9 @@ module mastermind(
                     SSD1 <= 8'b11111111; // Off
                     SSD0 <= 8'b10000011; // b
                     
-                    if (enterA || enterB) 
+                    if (enterA || enterB) begin
                         current_state <= 4'd1;
+                    end
                 end
 
                 4'd1: begin
@@ -95,7 +91,8 @@ module mastermind(
                     if (timer_counter >= 3) begin
                         timer_counter <= 0;
                         current_state <= 4'd2;
-                    end else begin
+                    end 
+                    else begin
                         timer_counter <= timer_counter + 1;
                     end
                 end
@@ -104,14 +101,19 @@ module mastermind(
                     SSD3 <= 8'b10001100; // P
                     SSD2 <= 8'b10111111; // -
                     SSD1 <= 8'b11111111;
-                    if (turn_A) SSD0 <= 8'b10001000; // A
-                    else        SSD0 <= 8'b10000011; // b
+                    if (turn_A) begin
+                        SSD0 <= 8'b10001000; // A
+                    end
+                    else begin
+                        SSD0 <= 8'b10000011; // b
+                    end
                     
                     if (timer_counter >= 3) begin
                         timer_counter <= 0;
                         current_state <= 4'd3;
                         letter_count <= 0;
-                    end else begin
+                    end
+                    else begin
                         timer_counter <= timer_counter + 1;
                     end
                 end
@@ -179,7 +181,8 @@ module mastermind(
                         if (letter_count == 3) begin
                             current_state <= 4'd4;
                             letter_count <= 0;
-                        end else begin
+                        end
+                        else begin
                             letter_count <= letter_count + 1;
                         end
                     end
@@ -189,13 +192,18 @@ module mastermind(
                     SSD3 <= 8'b10001100; // P
                     SSD2 <= 8'b10111111; // -
                     SSD1 <= 8'b11111111;
-                    if (turn_A) SSD0 <= 8'b10000011; // b
-                    else        SSD0 <= 8'b10001000; // A
+                    if (turn_A) begin
+                        SSD0 <= 8'b10000011; // b
+                    end 
+                    else begin
+                        SSD0 <= 8'b10001000; // A
+                    end
                     
                     if (timer_counter >= 3) begin
                         timer_counter <= 0;
                         current_state <= 4'd5;
-                    end else begin
+                    end 
+                    else begin
                         timer_counter <= timer_counter + 1;
                     end
                 end
@@ -215,7 +223,8 @@ module mastermind(
                         timer_counter <= 0;
                         current_state <= 4'd6;
                         letter_count <= 0;
-                    end else begin
+                    end 
+                    else begin
                         timer_counter <= timer_counter + 1;
                     end
                 end
@@ -340,7 +349,8 @@ module mastermind(
                         if (letter_count == 3) begin
                             current_state <= 4'd7;
                             letter_count <= 0;
-                        end else begin
+                        end 
+                        else begin
                             letter_count <= letter_count + 1;
                         end
                     end
@@ -408,21 +418,33 @@ module mastermind(
                     if (!state_initialized) begin
                         state_initialized <= 1;
                         if (is_correct) begin
-                            if (turn_A) score_B <= score_B + 1;
-                            else        score_A <= score_A + 1;
-                        end else begin
-                            if (lives > 0) lives <= lives - 1;
+                            if (turn_A) begin
+                                score_B <= score_B + 1;
+                            end
+                            else begin
+                                score_A <= score_A + 1;
+                            end
+                        end 
+                        else begin
+                            if (lives > 0) begin
+                                lives <= lives - 1;
+                            end
                             if (lives == 1) begin
-                                if (turn_A) score_A <= score_A + 1;
-                                else        score_B <= score_B + 1;
+                                if (turn_A) begin
+                                    score_A <= score_A + 1;
+                                end
+                                else begin
+                                    score_B <= score_B + 1;
+                                end
                             end
                         end
                     end 
                     else begin
                         if (brakerButtonRise) begin
                             state_initialized <= 0;
-                            if (is_correct || lives == 0)
+                            if (is_correct || lives == 0) begin
                                 current_state <= 4'd9;
+                            end
                             else begin
                                 current_state <= 4'd6;
                                 letter_count <= 0;
@@ -477,7 +499,8 @@ module mastermind(
                     if (timer_counter >= 3) begin
                         timer_counter <= 0;
                         current_state <= 4'd10;
-                    end else begin
+                    end 
+                    else begin
                         timer_counter <= timer_counter + 1;
                     end
                 end
@@ -503,12 +526,14 @@ module mastermind(
                         if (score_A == 2 || score_B == 2) begin
                             current_state <= 4'd0;
                             score_A <= 0; score_B <= 0; lives <= 3; turn_A <= 1;
-                        end else begin
+                        end 
+                        else begin
                             current_state <= 4'd1;
                             turn_A <= ~turn_A;
                             lives <= 3;
                         end
-                    end else begin
+                    end 
+                    else begin
                         timer_counter <= timer_counter + 1;
                     end
                 end
