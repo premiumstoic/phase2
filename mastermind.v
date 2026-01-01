@@ -26,7 +26,6 @@ module mastermind(
     reg [7:0] check_result;
     reg prev_enterA;
     reg prev_enterB;
-    reg state_initialized;
 
     wire makerButtonRise;
     wire brakerButtonRise;
@@ -52,7 +51,6 @@ module mastermind(
             
             prev_enterA <= 0;
             prev_enterB <= 0;
-            state_initialized <= 0;
             check_result <= 8'b0;
             
             maker_reg[0] <= 0; maker_reg[1] <= 0; maker_reg[2] <= 0; maker_reg[3] <= 0;
@@ -65,7 +63,7 @@ module mastermind(
             prev_enterA <= enterA;
             prev_enterB <= enterB;
 
-            if (current_state != 4'd8 && current_state != 4'd9) begin
+            if (current_state != 4'd8 && current_state != 4'd9 && current_state != 4'd11) begin
                 LEDX <= 8'b00000000;
             end
 
@@ -373,6 +371,23 @@ module mastermind(
                 end
 
                 4'd8: begin
+                    // --- STATE 8: CALCULATION (One-Shot) ---
+                    // Perform calculations immediately
+                    if (is_correct) begin
+                        if (turn_A) begin
+                            score_B <= score_B + 1;
+                        end
+                        else begin
+                            score_A <= score_A + 1;
+                        end
+                    end 
+                    else begin
+                        if (lives > 0) begin
+                            lives <= lives - 1;
+                        end
+                    end
+                    
+                    // Display guess immediately
                     case (braker_reg[0])
                         3'b000: SSD3 <= 8'b10001110; // F
                         3'b001: SSD3 <= 8'b10001000; // A
@@ -414,22 +429,62 @@ module mastermind(
                         default: SSD0 <= 8'b11111111; // OFF
                     endcase
                     LEDX <= check_result;
+                    
+                    // Move immediately to wait state
+                    current_state <= 4'd11;
+                end
 
-                    if (!state_initialized) begin
-                        state_initialized <= 1;
-                        if (is_correct) begin
-                            if (turn_A) begin
-                                score_B <= score_B + 1;
-                            end
-                            else begin
-                                score_A <= score_A + 1;
-                            end
-                        end 
-                        else begin
-                            if (lives > 0) begin
-                                lives <= lives - 1;
-                            end
-                            if (lives == 1) begin
+                4'd11: begin
+                    // --- STATE 11: WAIT FOR USER (New State) ---
+                    // Keep displays active (critical)
+                    case (braker_reg[0])
+                        3'b000: SSD3 <= 8'b10001110; // F
+                        3'b001: SSD3 <= 8'b10001000; // A
+                        3'b010: SSD3 <= 8'b11000110; // C
+                        3'b011: SSD3 <= 8'b10000110; // E
+                        3'b100: SSD3 <= 8'b10001001; // H
+                        3'b110: SSD3 <= 8'b11000111; // L
+                        3'b111: SSD3 <= 8'b11000001; // U
+                        default: SSD3 <= 8'b11111111; // OFF
+                    endcase
+                    case (braker_reg[1])
+                        3'b000: SSD2 <= 8'b10001110; // F
+                        3'b001: SSD2 <= 8'b10001000; // A
+                        3'b010: SSD2 <= 8'b11000110; // C
+                        3'b011: SSD2 <= 8'b10000110; // E
+                        3'b100: SSD2 <= 8'b10001001; // H
+                        3'b110: SSD2 <= 8'b11000111; // L
+                        3'b111: SSD2 <= 8'b11000001; // U
+                        default: SSD2 <= 8'b11111111; // OFF
+                    endcase
+                    case (braker_reg[2])
+                        3'b000: SSD1 <= 8'b10001110; // F
+                        3'b001: SSD1 <= 8'b10001000; // A
+                        3'b010: SSD1 <= 8'b11000110; // C
+                        3'b011: SSD1 <= 8'b10000110; // E
+                        3'b100: SSD1 <= 8'b10001001; // H
+                        3'b110: SSD1 <= 8'b11000111; // L
+                        3'b111: SSD1 <= 8'b11000001; // U
+                        default: SSD1 <= 8'b11111111; // OFF
+                    endcase
+                    case (braker_reg[3])
+                        3'b000: SSD0 <= 8'b10001110; // F
+                        3'b001: SSD0 <= 8'b10001000; // A
+                        3'b010: SSD0 <= 8'b11000110; // C
+                        3'b011: SSD0 <= 8'b10000110; // E
+                        3'b100: SSD0 <= 8'b10001001; // H
+                        3'b110: SSD0 <= 8'b11000111; // L
+                        3'b111: SSD0 <= 8'b11000001; // U
+                        default: SSD0 <= 8'b11111111; // OFF
+                    endcase
+                    LEDX <= check_result;
+                    
+                    // Wait for button press
+                    if (brakerButtonRise) begin
+                        // Check: Correct OR Lives ran out?
+                        if (is_correct || lives == 0) begin
+                            // Handle score update for loss case
+                            if (!is_correct && lives == 0) begin
                                 if (turn_A) begin
                                     score_A <= score_A + 1;
                                 end
@@ -437,18 +492,11 @@ module mastermind(
                                     score_B <= score_B + 1;
                                 end
                             end
+                            current_state <= 4'd9; // Show result
                         end
-                    end 
-                    else begin
-                        if (brakerButtonRise) begin
-                            state_initialized <= 0;
-                            if (is_correct || lives == 0) begin
-                                current_state <= 4'd9;
-                            end
-                            else begin
-                                current_state <= 4'd6;
-                                letter_count <= 0;
-                            end
+                        else begin
+                            current_state <= 4'd6; // Retry
+                            letter_count <= 0;
                         end
                     end
                 end
