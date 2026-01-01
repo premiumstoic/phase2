@@ -29,7 +29,7 @@ module tb_mastermind;
 
     // --- Main Test Sequence ---
     initial begin
-        $dumpfile("mastermind_wave.vcd");
+        $dumpfile("mastermind.vcd");
         $dumpvars(0, tb_mastermind);
         
         $display("========================================");
