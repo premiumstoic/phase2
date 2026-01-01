@@ -32,13 +32,14 @@ module tb_mastermind_comprehensive;
     localparam SEG_DASH = 8'b10111111; // -
 
     // Letter encoding
-    localparam LET_F = 3'b000;
-    localparam LET_A = 3'b001;
-    localparam LET_C = 3'b010;
-    localparam LET_E = 3'b011;
-    localparam LET_H = 3'b100;
-    localparam LET_L = 3'b110;
-    localparam LET_U = 3'b111;
+    localparam LET_DASH = 3'b000;
+    localparam LET_A    = 3'b001;
+    localparam LET_C    = 3'b010;
+    localparam LET_E    = 3'b011;
+    localparam LET_F    = 3'b100;
+    localparam LET_H    = 3'b101;
+    localparam LET_L    = 3'b110;
+    localparam LET_U    = 3'b111;
 
     // Test counters
     integer pass_count = 0;

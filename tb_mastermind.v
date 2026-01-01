@@ -73,13 +73,13 @@ module tb_mastermind;
         #5000; // Wait for S1/S2 timers
 
         $display("Maker (A) Enters: F-A-C-E");
-        maker_enter(3'b000); maker_enter(3'b001); maker_enter(3'b010); maker_enter(3'b011); 
+        maker_enter(3'b100); maker_enter(3'b001); maker_enter(3'b010); maker_enter(3'b011); 
 
         $display("Waiting for Role Swap Timer...");
         #5000; // Wait for S4/S5
 
         $display("Breaker (B) Guesses: F-A-C-E (Correct)");
-        breaker_enter(3'b000); breaker_enter(3'b001); breaker_enter(3'b010); breaker_enter(3'b011);
+        breaker_enter(3'b100); breaker_enter(3'b001); breaker_enter(3'b010); breaker_enter(3'b011);
 
         repeat (3) @(posedge clk); // Wait for Check
 
@@ -109,18 +109,18 @@ module tb_mastermind;
         // If turn_A=0, Maker is B (uses EnterB).
         
         $display("Maker (B) Enters: H-H-H-H");
-        letterIn = 3'b100; press_B();
-        letterIn = 3'b100; press_B();
-        letterIn = 3'b100; press_B();
-        letterIn = 3'b100; press_B();
+        letterIn = 3'b101; press_B();
+        letterIn = 3'b101; press_B();
+        letterIn = 3'b101; press_B();
+        letterIn = 3'b101; press_B();
 
         #5000; // Wait for swap
 
         $display("Breaker (A) Guesses WRONG: F-F-F-F");
-        letterIn = 3'b000; press_A();
-        letterIn = 3'b000; press_A();
-        letterIn = 3'b000; press_A();
-        letterIn = 3'b000; press_A();
+        letterIn = 3'b100; press_A();
+        letterIn = 3'b100; press_A();
+        letterIn = 3'b100; press_A();
+        letterIn = 3'b100; press_A();
 
         repeat (3) @(posedge clk);
         
@@ -131,10 +131,10 @@ module tb_mastermind;
         repeat (2) @(posedge clk);
 
         $display("Breaker (A) Retries CORRECTLY: H-H-H-H");
-        letterIn = 3'b100; press_A();
-        letterIn = 3'b100; press_A();
-        letterIn = 3'b100; press_A();
-        letterIn = 3'b100; press_A();
+        letterIn = 3'b101; press_A();
+        letterIn = 3'b101; press_A();
+        letterIn = 3'b101; press_A();
+        letterIn = 3'b101; press_A();
 
         repeat (3) @(posedge clk);
         if (LEDreg == 8'b11111111) $display("PASS: Retry successful.");
