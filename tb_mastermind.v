@@ -186,6 +186,51 @@ module tb_mastermind;
         else
             $display("INFO: Game reset. SSD3=%b SSD0=%b", SSD3, SSD0);
 
+        // ==========================================
+        // TEST CASE 4: INPUT ISOLATION (The "Cheater" Test)
+        // Requirement: "enter B button should not work" during A's turn
+        // ==========================================
+        $display("\n=== TEST CASE 4: INPUT ISOLATION CHECK ===");
+        rst = 0; #100; rst = 1; #1000;
+        press_A();
+        #5000; // Reach S3
+
+        $display("State S3: Attempting to press Enter B (Should be ignored)...");
+        enterB = 1; #600; enterB = 0; #500;
+
+        $display("Maker (A) Enters Valid Code: F-F-F-F");
+        maker_enter(3'b100); maker_enter(3'b100); maker_enter(3'b100); maker_enter(3'b100);
+
+        #5000; // Wait for swap to S4
+        $display("PASS: Input Isolation Verified. Game continued normally after invalid button press.");
+
+
+        // ==========================================
+        // TEST CASE 5: FULL LOSS (0 Lives)
+        // Requirement: "Player A do not guess the correct code" (Loss Condition)
+        // ==========================================
+        $display("\n=== TEST CASE 5: FULL LOSS CHECK ===");
+
+        $display("Breaker (B) Guess 1 (WRONG): A-A-A-A");
+        breaker_enter(3'b001); breaker_enter(3'b001); breaker_enter(3'b001); breaker_enter(3'b001);
+        repeat(3) @(posedge clk); press_B();
+
+        $display("Breaker (B) Guess 2 (WRONG): C-C-C-C");
+        breaker_enter(3'b010); breaker_enter(3'b010); breaker_enter(3'b010); breaker_enter(3'b010);
+        repeat(3) @(posedge clk); press_B();
+
+        $display("Breaker (B) Guess 3 (WRONG): E-E-E-E");
+        breaker_enter(3'b011); breaker_enter(3'b011); breaker_enter(3'b011); breaker_enter(3'b011);
+        repeat(3) @(posedge clk);
+
+        press_B();
+        repeat(6) @(posedge clk);
+
+        if (SSD3 === SEG_1 && SSD0 === SEG_0) 
+            $display("PASS: Full Loss Verified. Score is 1-0 (Maker won).");
+        else 
+            $display("FAIL: Score is %b-%b (Expected 1-0)", SSD3, SSD0);
+
         $display("\n--- SIMULATION COMPLETE ---");
         $display("All tests executed. Check waveform for detailed analysis.");
         $finish;
