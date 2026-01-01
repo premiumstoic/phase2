@@ -187,7 +187,7 @@ module mastermind(
                     endcase
                     LEDreg <= 8'b00000000;
 
-                    if (makerButtonRise) begin
+                    if (makerButtonRise && letterIn != 3'b000) begin
                         case (letter_count)
                             0: maker_reg_0 <= letterIn;
                             1: maker_reg_1 <= letterIn;
@@ -373,7 +373,7 @@ module mastermind(
                     endcase
                     LEDreg <= 8'b00000000;
 
-                    if (brakerButtonRise) begin
+                    if (brakerButtonRise && letterIn != 3'b000) begin
                         case (letter_count)
                             0: braker_reg_0 <= letterIn;
                             1: braker_reg_1 <= letterIn;
