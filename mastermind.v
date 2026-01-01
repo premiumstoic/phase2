@@ -133,6 +133,7 @@ module mastermind(
                                 3'b010: SSD3 <= 8'b11000110; // C
                                 3'b011: SSD3 <= 8'b10000110; // E
                                 3'b100: SSD3 <= 8'b10001001; // H
+                                3'b101: SSD3 <= 8'b11111111; // OFF (unused code)
                                 3'b110: SSD3 <= 8'b11000111; // L
                                 3'b111: SSD3 <= 8'b11000001; // U
                                 default: SSD3 <= 8'b11111111; // OFF
