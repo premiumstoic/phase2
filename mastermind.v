@@ -600,7 +600,7 @@ module mastermind(
                             score_A <= 0; score_B <= 0; lives <= 3; turn_A <= 1;
                         end 
                         else begin
-                            current_state <= 4'd1;
+                            current_state <= 4'd2;
                             turn_A <= ~turn_A;
                             lives <= 3;
                         end
