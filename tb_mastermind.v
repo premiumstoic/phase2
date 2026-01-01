@@ -5,13 +5,13 @@ module tb_mastermind;
     // --- Inputs & Outputs ---
     reg clk, rst, enterA, enterB;
     reg [2:0] letterIn;
-    wire [7:0] LEDX;
+    wire [7:0] LEDreg;
     wire [7:0] SSD3, SSD2, SSD1, SSD0;
 
     // --- Instantiate DUT ---
     mastermind uut (
         .clk(clk), .rst(rst), .enterA(enterA), .enterB(enterB), 
-        .letterIn(letterIn), .LEDX(LEDX), 
+        .letterIn(letterIn), .LEDreg(LEDreg), 
         .SSD3(SSD3), .SSD2(SSD2), .SSD1(SSD1), .SSD0(SSD0)
     );
 
@@ -83,8 +83,8 @@ module tb_mastermind;
 
         repeat (3) @(posedge clk); // Wait for Check
 
-        if (LEDX == 8'b11111111) $display("PASS: LEDs indicate correct guess.");
-        else $display("FAIL: LEDs show %b", LEDX);
+        if (LEDreg == 8'b11111111) $display("PASS: LEDs indicate correct guess.");
+        else $display("FAIL: LEDs show %b", LEDreg);
 
         press_B(); // Ack result
         repeat (6) @(posedge clk); // Wait for S10
@@ -124,7 +124,7 @@ module tb_mastermind;
 
         repeat (3) @(posedge clk);
         
-        if (LEDX != 8'b11111111) $display("PASS: LEDs show incomplete match (Correct).");
+        if (LEDreg != 8'b11111111) $display("PASS: LEDs show incomplete match (Correct).");
         else $display("FAIL: LEDs show match for wrong guess!");
 
         press_A(); // Ack result (Retry)
@@ -137,8 +137,8 @@ module tb_mastermind;
         letterIn = 3'b100; press_A();
 
         repeat (3) @(posedge clk);
-        if (LEDX == 8'b11111111) $display("PASS: Retry successful.");
-        else $display("FAIL: Retry LEDs show %b", LEDX);
+        if (LEDreg == 8'b11111111) $display("PASS: Retry successful.");
+        else $display("FAIL: Retry LEDs show %b", LEDreg);
         
         press_A(); // Ack result
         repeat (6) @(posedge clk); // Wait for S10
@@ -166,8 +166,8 @@ module tb_mastermind;
 
         repeat (3) @(posedge clk);
 
-        if (LEDX == 8'b11111111) $display("PASS: LEDs indicate correct guess.");
-        else $display("FAIL: LEDs show %b", LEDX);
+        if (LEDreg == 8'b11111111) $display("PASS: LEDs indicate correct guess.");
+        else $display("FAIL: LEDs show %b", LEDreg);
 
         press_B(); // Ack result
         repeat (6) @(posedge clk); // Wait for S10
