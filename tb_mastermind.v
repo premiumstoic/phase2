@@ -1,5 +1,3 @@
-`timescale 1ms/1ms
-
 module tb_mastermind;
 
     // --- Inputs & Outputs ---
@@ -8,231 +6,218 @@ module tb_mastermind;
     wire [7:0] LEDreg;
     wire [7:0] SSD3, SSD2, SSD1, SSD0;
 
-    // --- Instantiate DUT ---
+    // --- Instantiate DUT (Device Under Test) ---
     mastermind uut (
-        .clk(clk), .rst(rst), .enterA(enterA), .enterB(enterB), 
-        .letterIn(letterIn), .LEDreg(LEDreg), 
-        .SSD3(SSD3), .SSD2(SSD2), .SSD1(SSD1), .SSD0(SSD0)
+        .clk(clk), 
+        .rst(rst), 
+        .enterA(enterA), 
+        .enterB(enterB), 
+        .letterIn(letterIn), 
+        .LEDreg(LEDreg), 
+        .SSD3(SSD3), 
+        .SSD2(SSD2), 
+        .SSD1(SSD1), 
+        .SSD0(SSD0)
     );
 
-    // --- 8-Bit Segment Patterns (Parameterized - Update these if you change logic) ---
-    localparam SEG_0 = 8'b11000000;  // 0
-    localparam SEG_1 = 8'b11111001;  // 1
-    localparam SEG_2 = 8'b10100100;  // 2
+    // --- Clock Parameters ---
+    parameter HP = 250;  // Half period
+    parameter FP = 500;  // Full period (2*HP)
 
-    // --- Clock Generation (2 Hz) ---
-    initial begin
-        clk = 0;
-        forever #250 clk = ~clk; 
-    end
-
-    // --- Helper Tasks ---
-    task press_A;
-        begin
-            @(negedge clk); enterA = 1; #600; enterA = 0; #500;
-        end
-    endtask
-
-    task press_B;
-        begin
-            @(negedge clk); enterB = 1; #600; enterB = 0; #500;
-        end
-    endtask
-
-    task maker_enter;
-        input [2:0] val;
-        begin
-            letterIn = val; #50; press_A();
-        end
-    endtask
-
-    task breaker_enter;
-        input [2:0] val;
-        begin
-            letterIn = val; #50; press_B();
-        end
-    endtask
+    // --- Clock Generation ---
+    always #HP clk = ~clk;
 
     // --- Main Test Sequence ---
     initial begin
         $dumpfile("mastermind_wave.vcd");
         $dumpvars(0, tb_mastermind);
         
-        // 1. Reset
-        rst = 1; enterA = 0; enterB = 0; letterIn = 0;
-        #100; rst = 0; #100; rst = 1;
+        $display("========================================");
+        $display("   MASTERMIND TESTBENCH");
+        $display("========================================");
+        
+        clk = 1;
+        rst = 1; 
+        enterA = 0; 
+        enterB = 0; 
+        letterIn = 0;
+
+        #HP; rst = 0; #FP; rst = 1; #FP;
+
+        // ROUND 1: A is Maker, B guesses CORRECTLY
+        $display("\n[ROUND 1] A=Maker, B=Breaker");
+        enterA = 1; #FP; enterA = 0; #FP;
+        #5000;
+        
+        $display("  Maker A enters: F-A-C-E");
+        letterIn = 3'b100; enterA = 1; #FP; enterA = 0; #FP;
+        letterIn = 3'b001; enterA = 1; #FP; enterA = 0; #FP;
+        letterIn = 3'b010; enterA = 1; #FP; enterA = 0; #FP;
+        letterIn = 3'b011; enterA = 1; #FP; enterA = 0; #FP;
+
+        #5000;
+
+        $display("  Breaker B guesses: F-A-C-E");
+        letterIn = 3'b100; enterB = 1; #FP; enterB = 0; #FP;
+        letterIn = 3'b001; enterB = 1; #FP; enterB = 0; #FP;
+        letterIn = 3'b010; enterB = 1; #FP; enterB = 0; #FP;
+        letterIn = 3'b011; enterB = 1; #FP; enterB = 0; #FP;
+
+        #2000; 
+        if (LEDreg == 8'b11111111)
+            $display("  ✓ PASS: All LEDs lit (correct guess)");
+        else
+            $display("  ✗ FAIL: LEDs = %b (expected 11111111)", LEDreg);
+        
+        enterB = 1; #FP; enterB = 0; #FP;
+        #3000;
+        
+        if (SSD3 == 8'b11000000 && SSD0 == 8'b11111001)
+            $display("  ✓ PASS: Score = 0-1");
+        else
+            $display("  ✗ FAIL: Score = %b-%b (expected 0-1)", SSD3, SSD0);
+
+        // ROUND 2: B is Maker, A guesses WRONG then CORRECT
+        $display("\n[ROUND 2] B=Maker, A=Breaker");
+        #6000;
+
+        $display("  Maker B enters: H-H-H-H");
+        letterIn = 3'b101; enterB = 1; #FP; enterB = 0; #FP;
+        letterIn = 3'b101; enterB = 1; #FP; enterB = 0; #FP;
+        letterIn = 3'b101; enterB = 1; #FP; enterB = 0; #FP;
+        letterIn = 3'b101; enterB = 1; #FP; enterB = 0; #FP;
+
+        #5000;
+
+        $display("  Breaker A guesses (wrong): F-F-F-F");
+        letterIn = 3'b100; enterA = 1; #FP; enterA = 0; #FP;
+        letterIn = 3'b100; enterA = 1; #FP; enterA = 0; #FP;
+        letterIn = 3'b100; enterA = 1; #FP; enterA = 0; #FP;
+        letterIn = 3'b100; enterA = 1; #FP; enterA = 0; #FP;
+
+        #2000; 
+        if (LEDreg != 8'b11111111)
+            $display("  ✓ PASS: LEDs show partial match");
+        else
+            $display("  ✗ FAIL: LEDs = %b (should not be all 1s)", LEDreg);
+        
+        enterA = 1; #FP; enterA = 0; #FP;
         #1000;
 
-        // ==========================================
-        // ROUND 1: Player A is Maker, B guesses CORRECTLY
-        // ==========================================
-        $display("\n=== ROUND 1 START (A=Maker, B=Breaker) ===");
-        press_A(); // Start Game (S0 -> S1)
-        
-        $display("Waiting for Init Timers...");
-        #5000; // Wait for S1/S2 timers
+        $display("  Breaker A retries (correct): H-H-H-H");
+        letterIn = 3'b101; enterA = 1; #FP; enterA = 0; #FP;
+        letterIn = 3'b101; enterA = 1; #FP; enterA = 0; #FP;
+        letterIn = 3'b101; enterA = 1; #FP; enterA = 0; #FP;
+        letterIn = 3'b101; enterA = 1; #FP; enterA = 0; #FP;
 
-        $display("Maker (A) Enters: F-A-C-E");
-        maker_enter(3'b100); maker_enter(3'b001); maker_enter(3'b010); maker_enter(3'b011); 
-
-        $display("Waiting for Role Swap Timer...");
-        #5000; // Wait for S4/S5
-
-        $display("Breaker (B) Guesses: F-A-C-E (Correct)");
-        breaker_enter(3'b100); breaker_enter(3'b001); breaker_enter(3'b010); breaker_enter(3'b011);
-
-        repeat (3) @(posedge clk); // Wait for Check
-
-        if (LEDreg == 8'b11111111) $display("PASS: LEDs indicate correct guess.");
-        else $display("FAIL: LEDs show %b", LEDreg);
-
-        press_B(); // Ack result
-        repeat (6) @(posedge clk); // Wait for S10
-
-        // Check Score: Should be 0 - 1 (A - B)
-        if (SSD3 === SEG_0 && SSD0 === SEG_1) $display("PASS: Scoreboard shows 0-1.");
-        else $display("FAIL: Scoreboard shows SSD3=%b SSD0=%b", SSD3, SSD0);
-
-        // ==========================================
-        // ROUND 2: Player B is Maker, A Guesses WRONG, then CORRECT
-        // ==========================================
-        $display("\n=== ROUND 2 START (B=Maker, A=Breaker) ===");
-        // Logic: In S10, timer waits 2s, then swaps roles and goes to S1.
-        // We are already waiting in S10 from previous step.
-        // Let's wait for the transition to S3 (Maker Input)
-        
-        $display("Waiting for Round 2 Init...");
-        #6000; // Covers S10 wait + S1 wait + S2 wait
-
-        // Note: Code Maker is now B. So we use 'press_B' for Maker Input.
-        // Your logic uses "turn_A" flag. 
-        // If turn_A=0, Maker is B (uses EnterB).
-        
-        $display("Maker (B) Enters: H-H-H-H");
-        letterIn = 3'b101; press_B();
-        letterIn = 3'b101; press_B();
-        letterIn = 3'b101; press_B();
-        letterIn = 3'b101; press_B();
-
-        #5000; // Wait for swap
-
-        $display("Breaker (A) Guesses WRONG: F-F-F-F");
-        letterIn = 3'b100; press_A();
-        letterIn = 3'b100; press_A();
-        letterIn = 3'b100; press_A();
-        letterIn = 3'b100; press_A();
-
-        repeat (3) @(posedge clk);
-        
-        if (LEDreg != 8'b11111111) $display("PASS: LEDs show incomplete match (Correct).");
-        else $display("FAIL: LEDs show match for wrong guess!");
-
-        press_A(); // Ack result (Retry)
-        repeat (2) @(posedge clk);
-
-        $display("Breaker (A) Retries CORRECTLY: H-H-H-H");
-        letterIn = 3'b101; press_A();
-        letterIn = 3'b101; press_A();
-        letterIn = 3'b101; press_A();
-        letterIn = 3'b101; press_A();
-
-        repeat (3) @(posedge clk);
-        if (LEDreg == 8'b11111111) $display("PASS: Retry successful.");
-        else $display("FAIL: Retry LEDs show %b", LEDreg);
-        
-        press_A(); // Ack result
-        repeat (6) @(posedge clk); // Wait for S10
-
-        // Check Score: Should be 1 - 1 (A - B)
-        if (SSD3 === SEG_1 && SSD0 === SEG_1) $display("PASS: Scoreboard shows 1-1.");
-        else $display("FAIL: Scoreboard shows SSD3=%b SSD0=%b", SSD3, SSD0);
-
-        // ==========================================
-        // ROUND 3: Player A is Maker again, B guesses CORRECTLY -> Game Over
-        // ==========================================
-        $display("\n=== ROUND 3 START (A=Maker, B=Breaker) - Game Over Test ===");
-        
-        $display("Waiting for Round 3 Init...");
-        #6000; // Covers S10 wait + S1 wait + S2 wait
-
-        // Player A is Maker again (turn_A=1)
-        $display("Maker (A) Enters: U-U-U-U");
-        maker_enter(3'b111); maker_enter(3'b111); maker_enter(3'b111); maker_enter(3'b111); 
-
-        #5000; // Wait for S4/S5
-
-        $display("Breaker (B) Guesses: U-U-U-U (Correct)");
-        breaker_enter(3'b111); breaker_enter(3'b111); breaker_enter(3'b111); breaker_enter(3'b111);
-
-        repeat (3) @(posedge clk);
-
-        if (LEDreg == 8'b11111111) $display("PASS: LEDs indicate correct guess.");
-        else $display("FAIL: LEDs show %b", LEDreg);
-
-        press_B(); // Ack result
-        repeat (6) @(posedge clk); // Wait for S10
-
-        // Check Score: Should be 1 - 2 (A - B) -> B WINS THE MATCH
-        if (SSD3 === SEG_1 && SSD0 === SEG_2) $display("PASS: Scoreboard shows 1-2. Player B wins!");
-        else $display("FAIL: Scoreboard shows SSD3=%b SSD0=%b", SSD3, SSD0);
-
-        // Wait for game to reset (S10 timer expires -> S0)
-        #3000;
-
-        // Verify we're back at S0 (should show "A-b")
-        $display("Verifying Game Reset to S0...");
-        if (SSD3 === 8'b10001000 && SSD0 === 8'b10000011) // A and b
-            $display("PASS: Game returned to Start State (A-b displayed).");
+        #2000; 
+        if (LEDreg == 8'b11111111)
+            $display("  ✓ PASS: All LEDs lit (retry successful)");
         else
-            $display("INFO: Game reset. SSD3=%b SSD0=%b", SSD3, SSD0);
+            $display("  ✗ FAIL: LEDs = %b (expected 11111111)", LEDreg);
+        
+        enterA = 1; #FP; enterA = 0; #FP;
+        #3000;
+        
+        if (SSD3 == 8'b11111001 && SSD0 == 8'b11111001)
+            $display("  ✓ PASS: Score = 1-1");
+        else
+            $display("  ✗ FAIL: Score = %b-%b (expected 1-1)", SSD3, SSD0);
 
-        // ==========================================
-        // TEST CASE 4: INPUT ISOLATION (The "Cheater" Test)
-        // Requirement: "enter B button should not work" during A's turn
-        // ==========================================
-        $display("\n=== TEST CASE 4: INPUT ISOLATION CHECK ===");
-        rst = 0; #100; rst = 1; #1000;
-        press_A();
-        #5000; // Reach S3
+        // ROUND 3: A is Maker, B guesses CORRECTLY
+        $display("\n[ROUND 3] A=Maker, B=Breaker (Match Point)");
+        #6000;
 
-        $display("State S3: Attempting to press Enter B (Should be ignored)...");
-        enterB = 1; #600; enterB = 0; #500;
+        $display("  Maker A enters: U-U-U-U");
+        letterIn = 3'b111; enterA = 1; #FP; enterA = 0; #FP;
+        letterIn = 3'b111; enterA = 1; #FP; enterA = 0; #FP;
+        letterIn = 3'b111; enterA = 1; #FP; enterA = 0; #FP;
+        letterIn = 3'b111; enterA = 1; #FP; enterA = 0; #FP;
 
-        $display("Maker (A) Enters Valid Code: F-F-F-F");
-        maker_enter(3'b100); maker_enter(3'b100); maker_enter(3'b100); maker_enter(3'b100);
+        #5000;
 
-        #5000; // Wait for swap to S4
-        $display("PASS: Input Isolation Verified. Game continued normally after invalid button press.");
+        $display("  Breaker B guesses: U-U-U-U");
+        letterIn = 3'b111; enterB = 1; #FP; enterB = 0; #FP;
+        letterIn = 3'b111; enterB = 1; #FP; enterB = 0; #FP;
+        letterIn = 3'b111; enterB = 1; #FP; enterB = 0; #FP;
+        letterIn = 3'b111; enterB = 1; #FP; enterB = 0; #FP;
 
+        #2000; 
+        if (LEDreg == 8'b11111111)
+            $display("  ✓ PASS: All LEDs lit (correct guess)");
+        else
+            $display("  ✗ FAIL: LEDs = %b (expected 11111111)", LEDreg);
+        
+        enterB = 1; #FP; enterB = 0; #FP;
+        #3000;
+        
+        if (SSD3 == 8'b11111001 && SSD0 == 8'b10100100)
+            $display("  ✓ PASS: Score = 1-2 (Player B WINS!)");
+        else
+            $display("  ✗ FAIL: Score = %b-%b (expected 1-2)", SSD3, SSD0);
 
-        // ==========================================
-        // TEST CASE 5: FULL LOSS (0 Lives)
-        // Requirement: "Player A do not guess the correct code" (Loss Condition)
-        // ==========================================
-        $display("\n=== TEST CASE 5: FULL LOSS CHECK ===");
+        #3000;
+        
+        if (SSD3 == 8'b10001000 && SSD0 == 8'b10000011)
+            $display("  ✓ PASS: Game reset to start state (A-b)");
+        else
+            $display("  ✗ FAIL: Reset display = %b-%b (expected A-b)", SSD3, SSD0);
 
-        $display("Breaker (B) Guess 1 (WRONG): A-A-A-A");
-        breaker_enter(3'b001); breaker_enter(3'b001); breaker_enter(3'b001); breaker_enter(3'b001);
-        repeat(3) @(posedge clk); press_B();
+        // TEST: INPUT ISOLATION
+        $display("\n[TEST] Input Isolation");
+        #FP; rst = 0; #FP; rst = 1; #FP;
 
-        $display("Breaker (B) Guess 2 (WRONG): C-C-C-C");
-        breaker_enter(3'b010); breaker_enter(3'b010); breaker_enter(3'b010); breaker_enter(3'b010);
-        repeat(3) @(posedge clk); press_B();
+        enterA = 1; #FP; enterA = 0; #FP;
+        #5000;
 
-        $display("Breaker (B) Guess 3 (WRONG): E-E-E-E");
-        breaker_enter(3'b011); breaker_enter(3'b011); breaker_enter(3'b011); breaker_enter(3'b011);
-        repeat(3) @(posedge clk);
+        $display("  Attempting enterB during A's turn (should be ignored)");
+        enterB = 1; #FP; enterB = 0; #FP;
 
-        press_B();
-        repeat(6) @(posedge clk);
+        $display("  Maker A enters: F-F-F-F");
+        letterIn = 3'b100; enterA = 1; #FP; enterA = 0; #FP;
+        letterIn = 3'b100; enterA = 1; #FP; enterA = 0; #FP;
+        letterIn = 3'b100; enterA = 1; #FP; enterA = 0; #FP;
+        letterIn = 3'b100; enterA = 1; #FP; enterA = 0; #FP;
 
-        if (SSD3 === SEG_1 && SSD0 === SEG_0) 
-            $display("PASS: Full Loss Verified. Score is 1-0 (Maker won).");
-        else 
-            $display("FAIL: Score is %b-%b (Expected 1-0)", SSD3, SSD0);
+        #5000;
+        $display("  ✓ PASS: Input isolation verified (simulation continued)");
 
-        $display("\n--- SIMULATION COMPLETE ---");
-        $display("All tests executed. Check waveform for detailed analysis.");
+        // TEST: FULL LOSS
+        $display("\n[TEST] Full Loss (3 wrong guesses)");
+        
+        $display("  Breaker B guess 1 (wrong): A-A-A-A");
+        letterIn = 3'b001; enterB = 1; #FP; enterB = 0; #FP;
+        letterIn = 3'b001; enterB = 1; #FP; enterB = 0; #FP;
+        letterIn = 3'b001; enterB = 1; #FP; enterB = 0; #FP;
+        letterIn = 3'b001; enterB = 1; #FP; enterB = 0; #FP;
+
+        #2000; enterB = 1; #FP; enterB = 0; #FP;
+
+        $display("  Breaker B guess 2 (wrong): C-C-C-C");
+        letterIn = 3'b010; enterB = 1; #FP; enterB = 0; #FP;
+        letterIn = 3'b010; enterB = 1; #FP; enterB = 0; #FP;
+        letterIn = 3'b010; enterB = 1; #FP; enterB = 0; #FP;
+        letterIn = 3'b010; enterB = 1; #FP; enterB = 0; #FP;
+
+        #2000; enterB = 1; #FP; enterB = 0; #FP;
+
+        $display("  Breaker B guess 3 (wrong): E-E-E-E");
+        letterIn = 3'b011; enterB = 1; #FP; enterB = 0; #FP;
+        letterIn = 3'b011; enterB = 1; #FP; enterB = 0; #FP;
+        letterIn = 3'b011; enterB = 1; #FP; enterB = 0; #FP;
+        letterIn = 3'b011; enterB = 1; #FP; enterB = 0; #FP;
+
+        #2000; enterB = 1; #FP; enterB = 0; #FP;
+        #3000;
+        
+        if (SSD3 == 8'b11111001 && SSD0 == 8'b11000000)
+            $display("  ✓ PASS: Score = 1-0 (Maker A wins on full loss)");
+        else
+            $display("  ✗ FAIL: Score = %b-%b (expected 1-0)", SSD3, SSD0);
+
+        $display("\n========================================");
+        $display("   ALL TESTS COMPLETED");
+        $display("========================================");
         $finish;
     end
 endmodule
