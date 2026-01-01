@@ -181,7 +181,7 @@ module tb_mastermind;
 
         // Verify we're back at S0 (should show "A-b")
         $display("Verifying Game Reset to S0...");
-        if (SSD3 === 7'b0001000 && SSD0 === 7'b0000011) // A and b
+        if (SSD3 === 8'b10001000 && SSD0 === 8'b10000011) // A and b
             $display("PASS: Game returned to Start State (A-b displayed).");
         else
             $display("INFO: Game reset. SSD3=%b SSD0=%b", SSD3, SSD0);
