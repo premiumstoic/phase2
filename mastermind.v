@@ -13,21 +13,7 @@ module mastermind(
     output reg [6:0] SSD0 
     );
 
-    // --- State Encoding ---
-    localparam S0_START             = 4'd0;
-    localparam S1_INIT_SCORE        = 4'd1;
-    localparam S2_MAKER_DISP        = 4'd2;
-    localparam S3_MAKER_INPUT       = 4'd3;
-    localparam S4_BREAKER_DISP      = 4'd4;
-    localparam S5_LIVES_DISP        = 4'd5;
-    localparam S6_BREAKER_INPUT     = 4'd6;
-    localparam S7_CHECKER           = 4'd7;
-    localparam S8_UPDATE            = 4'd8;
-    localparam S9_RESULT            = 4'd9;
-    localparam S10_WIN_DECISION     = 4'd10;
-
     reg [3:0] current_state; // No next_state needed for single-process
-
     // --- Game Variables ---
     reg [2:0] timer_counter;
     reg [1:0] letter_count;  // Used for tracking inputs (0..3)
@@ -62,29 +48,10 @@ module mastermind(
                         (check_result[3] & check_result[2]) &
                         (check_result[1] & check_result[0]);
 
-    // --- TASK: 7-Segment Decoder ---
-    // Using a task allows us to reuse this logic inside the always block
-    task get_ssd;
-        input [2:0] val;
-        output [6:0] res;
-        begin
-            case (val)
-                3'b000: res = 7'b0001110; // F
-                3'b001: res = 7'b0001000; // A
-                3'b010: res = 7'b1000110; // C
-                3'b011: res = 7'b0000110; // E
-                3'b100: res = 7'b0001001; // H
-                3'b110: res = 7'b1000111; // L
-                3'b111: res = 7'b1000001; // U
-                default: res = 7'b1111111; // OFF
-            endcase
-        end
-    endtask
-
     // --- MAIN SINGLE PROCESS BLOCK ---
     always @(posedge clk or negedge rst) begin
         if (!rst) begin
-            current_state <= S0_START;
+            current_state <= 4'd0; // S0_START
             timer_counter <= 0;
             letter_count <= 0;
             score_A <= 0;
@@ -110,13 +77,13 @@ module mastermind(
             prev_enterB <= enterB;
 
             // 2. Default LED State (Off unless specified)
-            if (current_state != S8_UPDATE && current_state != S9_RESULT)
+            if (current_state != 4'd8 && current_state != 4'd9)
                 LEDX <= 8'b00000000;
 
             // 3. State Machine Logic
             case (current_state)
                 
-                S0_START: begin
+                4'd0: begin
                     // Display "A-b"
                     SSD3 <= 7'b0001000; // A
                     SSD2 <= 7'b0111111; // -
@@ -124,10 +91,10 @@ module mastermind(
                     SSD0 <= 7'b0000011; // b
                     
                     if (enterA || enterB) 
-                        current_state <= S1_INIT_SCORE;
+                        current_state <= 4'd1; // S1_INIT_SCORE
                 end
 
-                S1_INIT_SCORE: begin
+                4'd1: begin
                     // Display "0-0" (Initial Score)
                     SSD3 <= 7'b1000000; // 0
                     SSD2 <= 7'b0111111; // -
@@ -136,13 +103,13 @@ module mastermind(
                     
                     if (timer_counter >= 3) begin
                         timer_counter <= 0;
-                        current_state <= S2_MAKER_DISP;
+                        current_state <= 4'd2; // S2_MAKER_DISP
                     end else begin
                         timer_counter <= timer_counter + 1;
                     end
                 end
 
-                S2_MAKER_DISP: begin
+                4'd2: begin
                     // Display Active Player (P-A or P-b)
                     SSD3 <= 7'b0001100; // P
                     SSD2 <= 7'b0111111; // -
@@ -152,33 +119,69 @@ module mastermind(
                     
                     if (timer_counter >= 3) begin
                         timer_counter <= 0;
-                        current_state <= S3_MAKER_INPUT;
+                        current_state <= 4'd3; // S3_MAKER_INPUT
                         letter_count <= 0; // Ensure counter is 0 before input
                     end else begin
                         timer_counter <= timer_counter + 1;
                     end
                 end
 
-                S3_MAKER_INPUT: begin
+                4'd3: begin
                     // Handle Display (Logic from ASM)
                     case (letter_count)
                         0: begin 
-                            get_ssd(letterIn, SSD3); 
+                            case (letterIn)
+                                3'b000: SSD3 <= 7'b0001110; // F
+                                3'b001: SSD3 <= 7'b0001000; // A
+                                3'b010: SSD3 <= 7'b1000110; // C
+                                3'b011: SSD3 <= 7'b0000110; // E
+                                3'b100: SSD3 <= 7'b0001001; // H
+                                3'b110: SSD3 <= 7'b1000111; // L
+                                3'b111: SSD3 <= 7'b1000001; // U
+                                default: SSD3 <= 7'b1111111; // OFF
+                            endcase
                             SSD2 <= 7'b1111111; SSD1 <= 7'b1111111; SSD0 <= 7'b1111111;
                         end
                         1: begin 
                             SSD3 <= 7'b0111111; // -
-                            get_ssd(letterIn, SSD2);
+                            case (letterIn)
+                                3'b000: SSD2 <= 7'b0001110; // F
+                                3'b001: SSD2 <= 7'b0001000; // A
+                                3'b010: SSD2 <= 7'b1000110; // C
+                                3'b011: SSD2 <= 7'b0000110; // E
+                                3'b100: SSD2 <= 7'b0001001; // H
+                                3'b110: SSD2 <= 7'b1000111; // L
+                                3'b111: SSD2 <= 7'b1000001; // U
+                                default: SSD2 <= 7'b1111111; // OFF
+                            endcase
                             SSD1 <= 7'b1111111; SSD0 <= 7'b1111111;
                         end
                         2: begin 
                             SSD3 <= 7'b0111111; SSD2 <= 7'b0111111;
-                            get_ssd(letterIn, SSD1);
+                            case (letterIn)
+                                3'b000: SSD1 <= 7'b0001110; // F
+                                3'b001: SSD1 <= 7'b0001000; // A
+                                3'b010: SSD1 <= 7'b1000110; // C
+                                3'b011: SSD1 <= 7'b0000110; // E
+                                3'b100: SSD1 <= 7'b0001001; // H
+                                3'b110: SSD1 <= 7'b1000111; // L
+                                3'b111: SSD1 <= 7'b1000001; // U
+                                default: SSD1 <= 7'b1111111; // OFF
+                            endcase
                             SSD0 <= 7'b1111111;
                         end
                         3: begin 
                             SSD3 <= 7'b0111111; SSD2 <= 7'b0111111; SSD1 <= 7'b0111111;
-                            get_ssd(letterIn, SSD0);
+                            case (letterIn)
+                                3'b000: SSD0 <= 7'b0001110; // F
+                                3'b001: SSD0 <= 7'b0001000; // A
+                                3'b010: SSD0 <= 7'b1000110; // C
+                                3'b011: SSD0 <= 7'b0000110; // E
+                                3'b100: SSD0 <= 7'b0001001; // H
+                                3'b110: SSD0 <= 7'b1000111; // L
+                                3'b111: SSD0 <= 7'b1000001; // U
+                                default: SSD0 <= 7'b1111111; // OFF
+                            endcase
                         end
                     endcase
 
@@ -186,7 +189,7 @@ module mastermind(
                     if (makerButtonRise) begin
                         maker_reg[letter_count] <= letterIn;
                         if (letter_count == 3) begin
-                            current_state <= S4_BREAKER_DISP;
+                            current_state <= 4'd4; // S4_BREAKER_DISP
                             letter_count <= 0; // Reset for next usage
                         end else begin
                             letter_count <= letter_count + 1;
@@ -194,7 +197,7 @@ module mastermind(
                     end
                 end
 
-                S4_BREAKER_DISP: begin
+                4'd4: begin
                     // Display Breaker (Opposite of Turn A)
                     SSD3 <= 7'b0001100; // P
                     SSD2 <= 7'b0111111; // -
@@ -204,13 +207,13 @@ module mastermind(
                     
                     if (timer_counter >= 3) begin
                         timer_counter <= 0;
-                        current_state <= S5_LIVES_DISP;
+                        current_state <= 4'd5; // S5_LIVES_DISP
                     end else begin
                         timer_counter <= timer_counter + 1;
                     end
                 end
 
-                S5_LIVES_DISP: begin
+                4'd5: begin
                     // Display Lives (L-3)
                     SSD3 <= 7'b1000111; // L
                     SSD2 <= 7'b0111111; // -
@@ -225,36 +228,126 @@ module mastermind(
 
                     if (timer_counter >= 3) begin
                         timer_counter <= 0;
-                        current_state <= S6_BREAKER_INPUT;
+                        current_state <= 4'd6; // S6_BREAKER_INPUT
                         letter_count <= 0;
                     end else begin
                         timer_counter <= timer_counter + 1;
                     end
                 end
 
-                S6_BREAKER_INPUT: begin
+                4'd6: begin
                     // Handle Display (Accumulate letters)
                     case (letter_count)
                         0: begin 
-                            get_ssd(letterIn, SSD3); 
+                            case (letterIn)
+                                3'b000: SSD3 <= 7'b0001110; // F
+                                3'b001: SSD3 <= 7'b0001000; // A
+                                3'b010: SSD3 <= 7'b1000110; // C
+                                3'b011: SSD3 <= 7'b0000110; // E
+                                3'b100: SSD3 <= 7'b0001001; // H
+                                3'b110: SSD3 <= 7'b1000111; // L
+                                3'b111: SSD3 <= 7'b1000001; // U
+                                default: SSD3 <= 7'b1111111; // OFF
+                            endcase
                             SSD2 <= 7'b1111111; SSD1 <= 7'b1111111; SSD0 <= 7'b1111111;
                         end
                         1: begin 
-                            get_ssd(braker_reg[0], SSD3);
-                            get_ssd(letterIn, SSD2);
+                            case (braker_reg[0])
+                                3'b000: SSD3 <= 7'b0001110; // F
+                                3'b001: SSD3 <= 7'b0001000; // A
+                                3'b010: SSD3 <= 7'b1000110; // C
+                                3'b011: SSD3 <= 7'b0000110; // E
+                                3'b100: SSD3 <= 7'b0001001; // H
+                                3'b110: SSD3 <= 7'b1000111; // L
+                                3'b111: SSD3 <= 7'b1000001; // U
+                                default: SSD3 <= 7'b1111111; // OFF
+                            endcase
+                            case (letterIn)
+                                3'b000: SSD2 <= 7'b0001110; // F
+                                3'b001: SSD2 <= 7'b0001000; // A
+                                3'b010: SSD2 <= 7'b1000110; // C
+                                3'b011: SSD2 <= 7'b0000110; // E
+                                3'b100: SSD2 <= 7'b0001001; // H
+                                3'b110: SSD2 <= 7'b1000111; // L
+                                3'b111: SSD2 <= 7'b1000001; // U
+                                default: SSD2 <= 7'b1111111; // OFF
+                            endcase
                             SSD1 <= 7'b1111111; SSD0 <= 7'b1111111;
                         end
                         2: begin 
-                            get_ssd(braker_reg[0], SSD3);
-                            get_ssd(braker_reg[1], SSD2);
-                            get_ssd(letterIn, SSD1);
+                            case (braker_reg[0])
+                                3'b000: SSD3 <= 7'b0001110; // F
+                                3'b001: SSD3 <= 7'b0001000; // A
+                                3'b010: SSD3 <= 7'b1000110; // C
+                                3'b011: SSD3 <= 7'b0000110; // E
+                                3'b100: SSD3 <= 7'b0001001; // H
+                                3'b110: SSD3 <= 7'b1000111; // L
+                                3'b111: SSD3 <= 7'b1000001; // U
+                                default: SSD3 <= 7'b1111111; // OFF
+                            endcase
+                            case (braker_reg[1])
+                                3'b000: SSD2 <= 7'b0001110; // F
+                                3'b001: SSD2 <= 7'b0001000; // A
+                                3'b010: SSD2 <= 7'b1000110; // C
+                                3'b011: SSD2 <= 7'b0000110; // E
+                                3'b100: SSD2 <= 7'b0001001; // H
+                                3'b110: SSD2 <= 7'b1000111; // L
+                                3'b111: SSD2 <= 7'b1000001; // U
+                                default: SSD2 <= 7'b1111111; // OFF
+                            endcase
+                            case (letterIn)
+                                3'b000: SSD1 <= 7'b0001110; // F
+                                3'b001: SSD1 <= 7'b0001000; // A
+                                3'b010: SSD1 <= 7'b1000110; // C
+                                3'b011: SSD1 <= 7'b0000110; // E
+                                3'b100: SSD1 <= 7'b0001001; // H
+                                3'b110: SSD1 <= 7'b1000111; // L
+                                3'b111: SSD1 <= 7'b1000001; // U
+                                default: SSD1 <= 7'b1111111; // OFF
+                            endcase
                             SSD0 <= 7'b1111111;
                         end
                         3: begin 
-                            get_ssd(braker_reg[0], SSD3);
-                            get_ssd(braker_reg[1], SSD2);
-                            get_ssd(braker_reg[2], SSD1);
-                            get_ssd(letterIn, SSD0);
+                            case (braker_reg[0])
+                                3'b000: SSD3 <= 7'b0001110; // F
+                                3'b001: SSD3 <= 7'b0001000; // A
+                                3'b010: SSD3 <= 7'b1000110; // C
+                                3'b011: SSD3 <= 7'b0000110; // E
+                                3'b100: SSD3 <= 7'b0001001; // H
+                                3'b110: SSD3 <= 7'b1000111; // L
+                                3'b111: SSD3 <= 7'b1000001; // U
+                                default: SSD3 <= 7'b1111111; // OFF
+                            endcase
+                            case (braker_reg[1])
+                                3'b000: SSD2 <= 7'b0001110; // F
+                                3'b001: SSD2 <= 7'b0001000; // A
+                                3'b010: SSD2 <= 7'b1000110; // C
+                                3'b011: SSD2 <= 7'b0000110; // E
+                                3'b100: SSD2 <= 7'b0001001; // H
+                                3'b110: SSD2 <= 7'b1000111; // L
+                                3'b111: SSD2 <= 7'b1000001; // U
+                                default: SSD2 <= 7'b1111111; // OFF
+                            endcase
+                            case (braker_reg[2])
+                                3'b000: SSD1 <= 7'b0001110; // F
+                                3'b001: SSD1 <= 7'b0001000; // A
+                                3'b010: SSD1 <= 7'b1000110; // C
+                                3'b011: SSD1 <= 7'b0000110; // E
+                                3'b100: SSD1 <= 7'b0001001; // H
+                                3'b110: SSD1 <= 7'b1000111; // L
+                                3'b111: SSD1 <= 7'b1000001; // U
+                                default: SSD1 <= 7'b1111111; // OFF
+                            endcase
+                            case (letterIn)
+                                3'b000: SSD0 <= 7'b0001110; // F
+                                3'b001: SSD0 <= 7'b0001000; // A
+                                3'b010: SSD0 <= 7'b1000110; // C
+                                3'b011: SSD0 <= 7'b0000110; // E
+                                3'b100: SSD0 <= 7'b0001001; // H
+                                3'b110: SSD0 <= 7'b1000111; // L
+                                3'b111: SSD0 <= 7'b1000001; // U
+                                default: SSD0 <= 7'b1111111; // OFF
+                            endcase
                         end
                     endcase
 
@@ -262,7 +355,7 @@ module mastermind(
                     if (brakerButtonRise) begin
                         braker_reg[letter_count] <= letterIn;
                         if (letter_count == 3) begin
-                            current_state <= S7_CHECKER;
+                            current_state <= 4'd7; // S7_CHECKER
                             letter_count <= 0;
                         end else begin
                             letter_count <= letter_count + 1;
@@ -270,7 +363,7 @@ module mastermind(
                     end
                 end
 
-                S7_CHECKER: begin
+                4'd7: begin
                     // Calculate LEDs (One shot state)
                     // Pair 3
                     check_result[7] <= (braker_reg[0] == maker_reg[0]); 
@@ -289,15 +382,51 @@ module mastermind(
                     check_result[0] <= (braker_reg[3] == maker_reg[0] | braker_reg[3] == maker_reg[1] | 
                                         braker_reg[3] == maker_reg[2] | braker_reg[3] == maker_reg[3]);
                     
-                    current_state <= S8_UPDATE;
+                    current_state <= 4'd8; // S8_UPDATE
                 end
 
-                S8_UPDATE: begin
+                4'd8: begin
                     // Display Last Guess & LEDs
-                    get_ssd(braker_reg[0], SSD3);
-                    get_ssd(braker_reg[1], SSD2);
-                    get_ssd(braker_reg[2], SSD1);
-                    get_ssd(braker_reg[3], SSD0);
+                    case (braker_reg[0])
+                        3'b000: SSD3 <= 7'b0001110; // F
+                        3'b001: SSD3 <= 7'b0001000; // A
+                        3'b010: SSD3 <= 7'b1000110; // C
+                        3'b011: SSD3 <= 7'b0000110; // E
+                        3'b100: SSD3 <= 7'b0001001; // H
+                        3'b110: SSD3 <= 7'b1000111; // L
+                        3'b111: SSD3 <= 7'b1000001; // U
+                        default: SSD3 <= 7'b1111111; // OFF
+                    endcase
+                    case (braker_reg[1])
+                        3'b000: SSD2 <= 7'b0001110; // F
+                        3'b001: SSD2 <= 7'b0001000; // A
+                        3'b010: SSD2 <= 7'b1000110; // C
+                        3'b011: SSD2 <= 7'b0000110; // E
+                        3'b100: SSD2 <= 7'b0001001; // H
+                        3'b110: SSD2 <= 7'b1000111; // L
+                        3'b111: SSD2 <= 7'b1000001; // U
+                        default: SSD2 <= 7'b1111111; // OFF
+                    endcase
+                    case (braker_reg[2])
+                        3'b000: SSD1 <= 7'b0001110; // F
+                        3'b001: SSD1 <= 7'b0001000; // A
+                        3'b010: SSD1 <= 7'b1000110; // C
+                        3'b011: SSD1 <= 7'b0000110; // E
+                        3'b100: SSD1 <= 7'b0001001; // H
+                        3'b110: SSD1 <= 7'b1000111; // L
+                        3'b111: SSD1 <= 7'b1000001; // U
+                        default: SSD1 <= 7'b1111111; // OFF
+                    endcase
+                    case (braker_reg[3])
+                        3'b000: SSD0 <= 7'b0001110; // F
+                        3'b001: SSD0 <= 7'b0001000; // A
+                        3'b010: SSD0 <= 7'b1000110; // C
+                        3'b011: SSD0 <= 7'b0000110; // E
+                        3'b100: SSD0 <= 7'b0001001; // H
+                        3'b110: SSD0 <= 7'b1000111; // L
+                        3'b111: SSD0 <= 7'b1000001; // U
+                        default: SSD0 <= 7'b1111111; // OFF
+                    endcase
                     LEDX <= check_result;
 
                     if (!state_initialized) begin
@@ -317,32 +446,68 @@ module mastermind(
                         if (brakerButtonRise) begin
                             state_initialized <= 0;
                             if (is_correct || lives == 0)
-                                current_state <= S9_RESULT;
+                                current_state <= 4'd9; // S9_RESULT
                             else begin
-                                current_state <= S6_BREAKER_INPUT;
+                                current_state <= 4'd6; // S6_BREAKER_INPUT
                                 letter_count <= 0;
                             end
                         end
                     end
                 end
 
-                S9_RESULT: begin
+                4'd9: begin
                     // Display Secret Code & LEDs
-                    get_ssd(maker_reg[0], SSD3);
-                    get_ssd(maker_reg[1], SSD2);
-                    get_ssd(maker_reg[2], SSD1);
-                    get_ssd(maker_reg[3], SSD0);
+                    case (maker_reg[0])
+                        3'b000: SSD3 <= 7'b0001110; // F
+                        3'b001: SSD3 <= 7'b0001000; // A
+                        3'b010: SSD3 <= 7'b1000110; // C
+                        3'b011: SSD3 <= 7'b0000110; // E
+                        3'b100: SSD3 <= 7'b0001001; // H
+                        3'b110: SSD3 <= 7'b1000111; // L
+                        3'b111: SSD3 <= 7'b1000001; // U
+                        default: SSD3 <= 7'b1111111; // OFF
+                    endcase
+                    case (maker_reg[1])
+                        3'b000: SSD2 <= 7'b0001110; // F
+                        3'b001: SSD2 <= 7'b0001000; // A
+                        3'b010: SSD2 <= 7'b1000110; // C
+                        3'b011: SSD2 <= 7'b0000110; // E
+                        3'b100: SSD2 <= 7'b0001001; // H
+                        3'b110: SSD2 <= 7'b1000111; // L
+                        3'b111: SSD2 <= 7'b1000001; // U
+                        default: SSD2 <= 7'b1111111; // OFF
+                    endcase
+                    case (maker_reg[2])
+                        3'b000: SSD1 <= 7'b0001110; // F
+                        3'b001: SSD1 <= 7'b0001000; // A
+                        3'b010: SSD1 <= 7'b1000110; // C
+                        3'b011: SSD1 <= 7'b0000110; // E
+                        3'b100: SSD1 <= 7'b0001001; // H
+                        3'b110: SSD1 <= 7'b1000111; // L
+                        3'b111: SSD1 <= 7'b1000001; // U
+                        default: SSD1 <= 7'b1111111; // OFF
+                    endcase
+                    case (maker_reg[3])
+                        3'b000: SSD0 <= 7'b0001110; // F
+                        3'b001: SSD0 <= 7'b0001000; // A
+                        3'b010: SSD0 <= 7'b1000110; // C
+                        3'b011: SSD0 <= 7'b0000110; // E
+                        3'b100: SSD0 <= 7'b0001001; // H
+                        3'b110: SSD0 <= 7'b1000111; // L
+                        3'b111: SSD0 <= 7'b1000001; // U
+                        default: SSD0 <= 7'b1111111; // OFF
+                    endcase
                     LEDX <= check_result;
 
                     if (timer_counter >= 3) begin
                         timer_counter <= 0;
-                        current_state <= S10_WIN_DECISION;
+                        current_state <= 4'd10; // S10_WIN_DECISION
                     end else begin
                         timer_counter <= timer_counter + 1;
                     end
                 end
 
-                S10_WIN_DECISION: begin
+                4'd10: begin
                     // Display Scores (ScoreA - ScoreB)
                     case(score_A)
                         2'd0: SSD3 <= 7'b1000000; // 0
@@ -362,10 +527,10 @@ module mastermind(
                     if (timer_counter >= 3) begin
                         timer_counter <= 0;
                         if (score_A == 2 || score_B == 2) begin
-                            current_state <= S0_START; // Game Over
+                            current_state <= 4'd0; // Game Over
                             score_A <= 0; score_B <= 0; lives <= 3; turn_A <= 1;
                         end else begin
-                            current_state <= S1_INIT_SCORE; // Next Round
+                            current_state <= 4'd1; // Next Round
                             turn_A <= ~turn_A; // Swap roles
                             lives <= 3;
                         end
@@ -374,7 +539,7 @@ module mastermind(
                     end
                 end
                 
-                default: current_state <= S0_START;
+                default: current_state <= 4'd0; // Safety Reset
             endcase
         end
     end
