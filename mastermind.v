@@ -297,6 +297,115 @@ module mastermind(
         endcase
     end
 
+    // --- Helper: Decode 3-bit letter code to 7-segment (Combinational) ---
+    reg [6:0] decoded_letterIn;
+    reg [6:0] decoded_maker_0, decoded_maker_1, decoded_maker_2, decoded_maker_3;
+    reg [6:0] decoded_braker_0, decoded_braker_1, decoded_braker_2, decoded_braker_3;
+
+    always @(*) begin
+        // Decode letterIn (active input)
+        case (letterIn)
+            3'b000: decoded_letterIn = 7'b0001110; // F
+            3'b001: decoded_letterIn = 7'b0001000; // A
+            3'b010: decoded_letterIn = 7'b1000110; // C
+            3'b011: decoded_letterIn = 7'b0000110; // E
+            3'b100: decoded_letterIn = 7'b0001001; // H
+            3'b110: decoded_letterIn = 7'b1000111; // L
+            3'b111: decoded_letterIn = 7'b1000001; // U
+            default: decoded_letterIn = 7'b1111111; // OFF
+        endcase
+
+        // Decode maker_reg[0..3]
+        case (maker_reg[0])
+            3'b000: decoded_maker_0 = 7'b0001110;
+            3'b001: decoded_maker_0 = 7'b0001000;
+            3'b010: decoded_maker_0 = 7'b1000110;
+            3'b011: decoded_maker_0 = 7'b0000110;
+            3'b100: decoded_maker_0 = 7'b0001001;
+            3'b110: decoded_maker_0 = 7'b1000111;
+            3'b111: decoded_maker_0 = 7'b1000001;
+            default: decoded_maker_0 = 7'b1111111;
+        endcase
+
+        case (maker_reg[1])
+            3'b000: decoded_maker_1 = 7'b0001110;
+            3'b001: decoded_maker_1 = 7'b0001000;
+            3'b010: decoded_maker_1 = 7'b1000110;
+            3'b011: decoded_maker_1 = 7'b0000110;
+            3'b100: decoded_maker_1 = 7'b0001001;
+            3'b110: decoded_maker_1 = 7'b1000111;
+            3'b111: decoded_maker_1 = 7'b1000001;
+            default: decoded_maker_1 = 7'b1111111;
+        endcase
+
+        case (maker_reg[2])
+            3'b000: decoded_maker_2 = 7'b0001110;
+            3'b001: decoded_maker_2 = 7'b0001000;
+            3'b010: decoded_maker_2 = 7'b1000110;
+            3'b011: decoded_maker_2 = 7'b0000110;
+            3'b100: decoded_maker_2 = 7'b0001001;
+            3'b110: decoded_maker_2 = 7'b1000111;
+            3'b111: decoded_maker_2 = 7'b1000001;
+            default: decoded_maker_2 = 7'b1111111;
+        endcase
+
+        case (maker_reg[3])
+            3'b000: decoded_maker_3 = 7'b0001110;
+            3'b001: decoded_maker_3 = 7'b0001000;
+            3'b010: decoded_maker_3 = 7'b1000110;
+            3'b011: decoded_maker_3 = 7'b0000110;
+            3'b100: decoded_maker_3 = 7'b0001001;
+            3'b110: decoded_maker_3 = 7'b1000111;
+            3'b111: decoded_maker_3 = 7'b1000001;
+            default: decoded_maker_3 = 7'b1111111;
+        endcase
+
+        // Decode braker_reg[0..3]
+        case (braker_reg[0])
+            3'b000: decoded_braker_0 = 7'b0001110;
+            3'b001: decoded_braker_0 = 7'b0001000;
+            3'b010: decoded_braker_0 = 7'b1000110;
+            3'b011: decoded_braker_0 = 7'b0000110;
+            3'b100: decoded_braker_0 = 7'b0001001;
+            3'b110: decoded_braker_0 = 7'b1000111;
+            3'b111: decoded_braker_0 = 7'b1000001;
+            default: decoded_braker_0 = 7'b1111111;
+        endcase
+
+        case (braker_reg[1])
+            3'b000: decoded_braker_1 = 7'b0001110;
+            3'b001: decoded_braker_1 = 7'b0001000;
+            3'b010: decoded_braker_1 = 7'b1000110;
+            3'b011: decoded_braker_1 = 7'b0000110;
+            3'b100: decoded_braker_1 = 7'b0001001;
+            3'b110: decoded_braker_1 = 7'b1000111;
+            3'b111: decoded_braker_1 = 7'b1000001;
+            default: decoded_braker_1 = 7'b1111111;
+        endcase
+
+        case (braker_reg[2])
+            3'b000: decoded_braker_2 = 7'b0001110;
+            3'b001: decoded_braker_2 = 7'b0001000;
+            3'b010: decoded_braker_2 = 7'b1000110;
+            3'b011: decoded_braker_2 = 7'b0000110;
+            3'b100: decoded_braker_2 = 7'b0001001;
+            3'b110: decoded_braker_2 = 7'b1000111;
+            3'b111: decoded_braker_2 = 7'b1000001;
+            default: decoded_braker_2 = 7'b1111111;
+        endcase
+
+        case (braker_reg[3])
+            3'b000: decoded_braker_3 = 7'b0001110;
+            3'b001: decoded_braker_3 = 7'b0001000;
+            3'b010: decoded_braker_3 = 7'b1000110;
+            3'b011: decoded_braker_3 = 7'b0000110;
+            3'b100: decoded_braker_3 = 7'b0001001;
+            3'b110: decoded_braker_3 = 7'b1000111;
+            3'b111: decoded_braker_3 = 7'b1000001;
+            default: decoded_braker_3 = 7'b1111111;
+        endcase
+    end
+
     // --- Output Logic (SSDs) ---
     always @(*) begin
         // Default values
@@ -316,22 +425,22 @@ module mastermind(
                 case (letter_counter)
                     0: begin
                         // Display current switches at first slot
-                        SSD3 = decode_letter(letterIn);
+                        SSD3 = decoded_letterIn;
                     end
                     1: begin
                         SSD3 = 7'b0111111; // Dash
-                        SSD2 = decode_letter(letterIn);
+                        SSD2 = decoded_letterIn;
                     end
                     2: begin
                         SSD3 = 7'b0111111; // Dash
                         SSD2 = 7'b0111111; // Dash
-                        SSD1 = decode_letter(letterIn);
+                        SSD1 = decoded_letterIn;
                     end
                     3: begin
                         SSD3 = 7'b0111111; // Dash
                         SSD2 = 7'b0111111; // Dash
                         SSD1 = 7'b0111111; // Dash
-                        SSD0 = decode_letter(letterIn);
+                        SSD0 = decoded_letterIn;
                     end
                     default: begin
                         // 4 or more: keep defaults (OFF)
@@ -369,28 +478,28 @@ module mastermind(
             S6_BREAKER_INPUT: begin
                 case (letter_counter)
                     0: begin
-                        SSD3 = decode_letter(letterIn);
+                        SSD3 = decoded_letterIn;
                         SSD2 = 7'b0000000;
                         SSD1 = 7'b0000000;
                         SSD0 = 7'b0000000;
                     end
                     1: begin
-                        SSD3 = decode_letter(braker_reg[0]);
-                        SSD2 = decode_letter(letterIn);
+                        SSD3 = decoded_braker_0;
+                        SSD2 = decoded_letterIn;
                         SSD1 = 7'b0000000;
                         SSD0 = 7'b0000000;
                     end
                     2: begin
-                        SSD3 = decode_letter(braker_reg[0]);
-                        SSD2 = decode_letter(braker_reg[1]);
-                        SSD1 = decode_letter(letterIn);
+                        SSD3 = decoded_braker_0;
+                        SSD2 = decoded_braker_1;
+                        SSD1 = decoded_letterIn;
                         SSD0 = 7'b0000000;
                     end
                     3: begin
-                        SSD3 = decode_letter(braker_reg[0]);
-                        SSD2 = decode_letter(braker_reg[1]);
-                        SSD1 = decode_letter(braker_reg[2]);
-                        SSD0 = decode_letter(letterIn);
+                        SSD3 = decoded_braker_0;
+                        SSD2 = decoded_braker_1;
+                        SSD1 = decoded_braker_2;
+                        SSD0 = decoded_letterIn;
                     end
                     default: begin
                     end
@@ -399,18 +508,18 @@ module mastermind(
 
             // --- Display Logic for Game Update (show last guess + LEDs) ---
             S8_UPDATE: begin
-                SSD3 = decode_letter(braker_reg[0]);
-                SSD2 = decode_letter(braker_reg[1]);
-                SSD1 = decode_letter(braker_reg[2]);
-                SSD0 = decode_letter(braker_reg[3]);
+                SSD3 = decoded_braker_0;
+                SSD2 = decoded_braker_1;
+                SSD1 = decoded_braker_2;
+                SSD0 = decoded_braker_3;
             end
 
             // --- Display Logic for Result (show secret + LEDs) ---
             S9_RESULT: begin
-                SSD3 = decode_letter(maker_reg[0]);
-                SSD2 = decode_letter(maker_reg[1]);
-                SSD1 = decode_letter(maker_reg[2]);
-                SSD0 = decode_letter(maker_reg[3]);
+                SSD3 = decoded_maker_0;
+                SSD2 = decoded_maker_1;
+                SSD1 = decoded_maker_2;
+                SSD0 = decoded_maker_3;
             end
 
             // --- Display Logic for Score Decision (ScoreA - ScoreB) ---
@@ -442,24 +551,5 @@ module mastermind(
         if (current_state == S8_UPDATE || current_state == S9_RESULT)
             LEDX = check_result;
     end
-
-    // Helper Function to decode 3-bit letter to 7-segment
-    function [6:0] decode_letter;
-        input [2:0] code;
-        begin
-            case (code)
-                // Format: 7'b(g)(f)(e)(d)(c)(b)(a)  <-- Check your board's pinout!
-                // Assuming standard active-low (0 is ON):
-                3'b000: decode_letter = 7'b0001110; // F (000) 
-                3'b001: decode_letter = 7'b0001000; // A (001) 
-                3'b010: decode_letter = 7'b1000110; // C (010) 
-                3'b011: decode_letter = 7'b0000110; // E (011) 
-                3'b100: decode_letter = 7'b0001001; // H (100) 
-                3'b110: decode_letter = 7'b1000111; // L (110) 
-                3'b111: decode_letter = 7'b1000001; // U (111) 
-                default: decode_letter = 7'b1111111; // OFF
-            endcase
-        end
-    endfunction
 
 endmodule
