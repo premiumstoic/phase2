@@ -1,6 +1,6 @@
 module mastermind(
-    input clk,              // 2 Hz clock for simulation
-    input rst,              // Active-low reset
+    input clk,
+    input rst,
     
     input enterA,
     input enterB,
@@ -408,8 +408,6 @@ module mastermind(
                 end
 
                 4'd8: begin
-                    // --- STATE 8: CALCULATION (One-Shot) ---
-                    // Perform calculations immediately
                     if (is_correct) begin
                         if (turn_A) begin
                             score_B <= score_B + 1;
@@ -424,7 +422,6 @@ module mastermind(
                         end
                     end
                     
-                    // Display guess immediately
                     case (braker_reg_0)
                         3'b000: SSD3 <= 8'b10111111; // -
                         3'b001: SSD3 <= 8'b10001000; // A
@@ -471,13 +468,10 @@ module mastermind(
                     endcase
                     LEDreg <= check_result;
                     
-                    // Move immediately to wait state
                     current_state <= 4'd11;
                 end
 
                 4'd11: begin
-                    // --- STATE 11: WAIT FOR USER (New State) ---
-                    // Keep displays active (critical)
                     case (braker_reg_0)
                         3'b000: SSD3 <= 8'b10111111; // -
                         3'b001: SSD3 <= 8'b10001000; // A
@@ -524,11 +518,8 @@ module mastermind(
                     endcase
                     LEDreg <= check_result;
                     
-                    // Wait for button press
                     if (brakerButtonRise) begin
-                        // Check: Correct OR Lives ran out?
                         if (is_correct || lives == 0) begin
-                            // Handle score update for loss case
                             if (!is_correct && lives == 0) begin
                                 if (turn_A) begin
                                     score_A <= score_A + 1;
