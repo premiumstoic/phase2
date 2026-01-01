@@ -1,5 +1,3 @@
-`timescale 1ms/1ms
-
 module tb_mastermind;
 
     // --- Inputs & Outputs ---
