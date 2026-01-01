@@ -6,7 +6,7 @@ module mastermind(
     input enterB,
     input [2:0] letterIn,
    
-    output reg [7:0] LEDX,
+    output reg [7:0] LEDreg,
     output reg [7:0] SSD3,
     output reg [7:0] SSD2,
     output reg [7:0] SSD1,
@@ -57,14 +57,14 @@ module mastermind(
             braker_reg[0] <= 0; braker_reg[1] <= 0; braker_reg[2] <= 0; braker_reg[3] <= 0;
             
             SSD3 <= 8'b11111111; SSD2 <= 8'b11111111; SSD1 <= 8'b11111111; SSD0 <= 8'b11111111;
-            LEDX <= 8'b0;
+            LEDreg <= 8'b0;
         end 
         else begin
             prev_enterA <= enterA;
             prev_enterB <= enterB;
 
             if (current_state != 4'd8 && current_state != 4'd9 && current_state != 4'd11) begin
-                LEDX <= 8'b00000000;
+                LEDreg <= 8'b00000000;
             end
 
             case (current_state)
@@ -428,7 +428,7 @@ module mastermind(
                         3'b111: SSD0 <= 8'b11000001; // U
                         default: SSD0 <= 8'b11111111; // OFF
                     endcase
-                    LEDX <= check_result;
+                    LEDreg <= check_result;
                     
                     // Move immediately to wait state
                     current_state <= 4'd11;
@@ -477,7 +477,7 @@ module mastermind(
                         3'b111: SSD0 <= 8'b11000001; // U
                         default: SSD0 <= 8'b11111111; // OFF
                     endcase
-                    LEDX <= check_result;
+                    LEDreg <= check_result;
                     
                     // Wait for button press
                     if (brakerButtonRise) begin
@@ -542,7 +542,7 @@ module mastermind(
                         3'b111: SSD0 <= 8'b11000001; // U
                         default: SSD0 <= 8'b11111111; // OFF
                     endcase
-                    LEDX <= check_result;
+                    LEDreg <= check_result;
 
                     if (timer_counter >= 3) begin
                         timer_counter <= 0;
